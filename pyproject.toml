@@ -10,6 +10,9 @@ dependencies = [
     "langchain>=1.2,<2",
     "langchain-google-genai>=4,<5",
     "langgraph-checkpoint-sqlite>=3,<4",
+    # 1-B、2-E 的 MCP（兩個要一起釘，版本不配會 import 失敗）
+    "mcp>=1.20,<2",
+    "langchain-mcp-adapters>=0.3,<0.4",
 ]
 
 [dependency-groups]

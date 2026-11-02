@@ -73,7 +73,25 @@ def 準備():
                 importlib.reload(mod)
             except Exception:
                 sys.modules.pop(name, None)
+    _讓_mcp_stdio_能在notebook用()
     return get_model()
+
+
+def _讓_mcp_stdio_能在notebook用() -> None:
+    """mcp 的 stdio_client 會把 MCP server 的錯誤輸出接到 sys.stderr。
+    Colab（Linux）的 sys.stderr 有真的檔案代號，沒問題；Windows 的 Jupyter 沒有，就改接到 log 檔。"""
+    try:
+        sys.stderr.fileno()
+        return
+    except Exception:
+        pass
+    try:
+        import mcp.client.stdio as mcp_stdio
+    except ImportError:
+        return
+    (BASE / "deploy").mkdir(exist_ok=True)
+    log = open(BASE / "deploy" / "mcp_server.log", "a", encoding="utf-8")
+    mcp_stdio.stdio_client.__wrapped__.__defaults__ = (log,)
 
 
 # ---------- State 歷程 ----------

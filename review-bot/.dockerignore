@@ -2,6 +2,10 @@
 .env
 .llm.json
 checkpoints.sqlite*
+deploy/*.sqlite*
+deploy/.port
+deploy/.mcp_port
+deploy/*.log
 history.jsonl
 寄件匣.txt
 2B_results.json

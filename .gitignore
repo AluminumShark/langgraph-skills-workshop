@@ -16,3 +16,5 @@ review-bot/寄件匣.txt
 review-bot/2B_results.json
 review-bot/作業.py
 review-bot/.env
+review-bot/deploy/*.log
+review-bot/deploy/.mcp_port

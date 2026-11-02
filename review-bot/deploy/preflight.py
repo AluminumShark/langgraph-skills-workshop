@@ -66,14 +66,19 @@ def 檢查() -> list[tuple[str, str, str]]:
     擋下 = 執行作業("import os\nos.listdir('.')").startswith("⛔")
     結果.append(("✅" if 擋下 else "❌", "run_code 有圍欄", "import os 會被擋下" if 擋下 else "import os 沒有被擋下！"))
 
-    dual = (BASE / "dual_core.py").read_text(encoding="utf-8")
-    結果.append(("✅" if "recursion_limit" in dual else "❌", "agent 有 recursion_limit", "裡面的小 agent 最多跑 25 步"))
-    結果.append(("⚠️" if "SqliteSaver" in dual else "✅", "checkpointer 是持久的",
+    多agent = BASE / "deploy" / "multi_agent.py"
+    內容 = 多agent.read_text(encoding="utf-8") if 多agent.exists() else ""
+    結果.append(("✅" if "recursion_limit" in 內容 else "❌", "agent 有 recursion_limit", "每個批改子 agent 最多跑 25 步"))
+    結果.append(("⚠️" if "SqliteSaver" in 內容 else "✅", "checkpointer 是持久的",
                "SQLite 只存在這一台機器；雲端機器會被換掉，上線要改用 PostgresSaver"))
-
-    寄信 = BASE / "deploy" / "email_flow.py"
-    有確認 = 寄信.exists() and "interrupt(" in 寄信.read_text(encoding="utf-8")
+    有確認 = "interrupt(" in 內容
     結果.append(("✅" if 有確認 else "❌", "不可逆的動作（寄信）前面有 interrupt", "寄信前會停下來等人確認" if 有確認 else "找不到 interrupt"))
+    有驗證 = "稽核員人設" in 內容
+    結果.append(("✅" if 有驗證 else "❌", "有獨立的驗證 agent", "批改和稽核是兩個不同人設，不會自己放過自己" if 有驗證 else "找不到驗證 agent"))
+
+    網址 = os.environ.get("HOMEWORK_MCP_URL")
+    結果.append(("✅" if 網址 else "⚠️", "作業倉庫 MCP 從網址連（遠端 MCP）",
+               f"HOMEWORK_MCP_URL={網址}" if 網址 else "現在是在同一台機器用 stdio 開 MCP server；上雲端要改成遠端 MCP 的網址（加上 OAuth 登入）"))
 
     缺 = [f for f in ("langgraph.json", "requirements.txt", "Dockerfile", ".dockerignore") if not (BASE / f).exists()]
     結果.append(("❌" if 缺 else "✅", "部署檔都在", f"缺少：{'、'.join(缺)}" if 缺 else "langgraph.json、requirements.txt、Dockerfile、.dockerignore"))

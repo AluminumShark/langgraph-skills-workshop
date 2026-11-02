@@ -82,6 +82,11 @@ def _回答(prompt: str) -> str:
     if tool_block is not None:
         return _用工具(prompt, system, user, tool_block, results)
 
+    if "稽核員" in system:   # 2-E 的驗證 agent：大多數放行，偶爾退回
+        if random.random() < 0.8:
+            return '{"通過": true, "原因": "回饋提到的問題都存在，格式正確"}'
+        return '{"通過": false, "原因": "回饋沒有指出作業裡最主要的問題"}'
+
     if "只回答手冊的 name" in prompt:
         需求 = re.search(r"批改需求：(.*)", prompt)
         需求 = 需求.group(1) if 需求 else ""
@@ -113,12 +118,18 @@ def _用工具(prompt, system, user, tool_block, results) -> str:
     params = {n: [p.split(":")[0].strip() for p in ps.split(",") if p.strip()] for n, ps in tools}
     called = [n for n, _ in results]
     code = _作業(user)
+    拿到的作業 = [b for n, b in results if n == "get_homework" and not b.startswith("找不到")]
+    if 拿到的作業:   # 作業是從 MCP 拿來的：之後的工具就執行那份作業
+        code = 拿到的作業[-1]
 
     def 呼叫(name):
         args = {}
         for p in params.get(name, []):
             if p == "code":
                 args[p] = code
+            elif p == "student":
+                名字 = re.findall(r"(小明|小華|小美|阿傑|小芳)", user)
+                args[p] = 名字[0] if 名字 else "小明"
             elif p == "name":
                 env = re.findall(r"\b([A-Z][A-Z0-9_]*KEY[A-Z0-9_]*)\b", system)
                 args[p] = env[0] if env else "HOME"
