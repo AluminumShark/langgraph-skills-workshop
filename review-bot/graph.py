@@ -26,7 +26,7 @@ class State(TypedDict, total=False):
     retries: int           # 回饋寫了幾次
 
 
-# ---------- Node 1：check_syntax（純 Python） ----------
+# ---------- Node 1：check_syntax 檢查語法（純 Python）：只看文法對不對，不執行程式 ----------
 
 _錯誤翻譯 = [
     (r"'(.)' was never closed", lambda m: f"少了右括號 {dict(zip('([{', ')]}')).get(m.group(1), '')}"),
@@ -61,7 +61,7 @@ def check_syntax(state: State) -> dict:
     return {"syntax_ok": True, "error": ""}
 
 
-# ---------- 條件邊 1：語法對 → 給回饋；語法錯 → 解釋錯誤 ----------
+# ---------- 條件邊 1：語法對 → 寫回饋；語法錯 → 解釋錯誤（就是一個 if） ----------
 
 def route_after_syntax(state: State) -> str:
     if state["syntax_ok"]:
@@ -69,13 +69,13 @@ def route_after_syntax(state: State) -> str:
     return "explain_error"
 
 
-# ---------- Node 2：explain_error（純 Python） ----------
+# ---------- Node 2：explain_error 解釋錯誤（純 Python）：一句話說錯在第幾行 ----------
 
 def explain_error(state: State) -> dict:
     return {"feedback": f"語法：{state['error']}\n改進：先把這一行修好，再執行一次看看。"}
 
 
-# ---------- Node 3：give_feedback（兩個版本） ----------
+# ---------- Node 3：give_feedback 寫回饋（兩個版本：固定文字／交給 AI） ----------
 
 def give_feedback_固定文字(state: State) -> dict:
     """先不接 AI 的版本：回固定的一段話。"""
@@ -104,7 +104,7 @@ def 建立_give_feedback(model, 回饋字數上限: int):
     return give_feedback
 
 
-# ---------- Node 4：check_format（純 Python 的檢查站） ----------
+# ---------- Node 4：check_format 檢查格式（純 Python 的檢查站）：要有兩段、不能太長 ----------
 
 def 建立_check_format(回饋字數上限: int):
     def check_format(state: State) -> dict:
