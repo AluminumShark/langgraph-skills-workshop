@@ -1,0 +1,8 @@
+# 作業小助教上雲端需要的套件（版本範圍和 notebook 一致）
+langgraph>=1.1,<2
+langchain>=1.2,<2
+langchain-google-genai>=4,<5
+langgraph-checkpoint-sqlite>=3,<4
+fastapi>=0.115
+uvicorn>=0.30
+# 正式環境把 SQLite 換成 Postgres 時再加：langgraph-checkpoint-postgres

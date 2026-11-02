@@ -1,0 +1,8 @@
+# 不要裝進容器的東西：金鑰、本機存檔、執行紀錄
+.env
+.llm.json
+checkpoints.sqlite*
+history.jsonl
+寄件匣.txt
+2B_results.json
+__pycache__/
