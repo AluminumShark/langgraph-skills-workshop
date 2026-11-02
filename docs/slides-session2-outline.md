@@ -1,12 +1,12 @@
 # 第 2 堂投影片大綱：Agent Skills 與 vibe coding
 
-共 33 張。設計原則：每張只帶一個新名詞；先看例子、再看規律、最後才給名字；表格最多三列，其餘放講義；每 15 分鐘一張「停一下」要學生在紙上寫答案。全堂新概念控制在 12 個以內。方括號數字對應文末參考來源。
+共 33 張（另有課後自學的「補充：上雲端」8 張，見文末；HTML 版共 54 張）。設計原則：每張只帶一個新名詞；先看例子、再看規律、最後才給名字；表格最多三列，其餘放講義；每 15 分鐘一張「停一下」要學生在紙上寫答案。全堂新概念控制在 12 個以內。方括號數字對應文末參考來源。
 
 ## 回顧與便利貼（0:00–0:08）
 
 ### 投影片 1｜封面
 
-- **畫面**：從 LangGraph 到 Skills：結構化與非結構化 Agent 的雙拼指南｜第 2 堂：給 AI 一本手冊，然後決定什麼放哪裡
+- **畫面**：從 LangGraph 到 Skills：結構化與非結構化 Agent 的雙拼指南｜第 2 堂：給 AI 一本手冊，然後決定什麼放哪裡；日期 2026-11-16（週一）；「課程資料」QR code 指向 https://github.com/AluminumShark/langgraph-skills-workshop
 - **講者**：請大家打開 `2-A_skills.ipynb` 並複製到雲端硬碟。
 
 ### 投影片 2｜上週你已經會的三件事
@@ -309,6 +309,71 @@ def check_naming(state):
 
 **兩份資安研究的數字**：Snyk 2026 年 2 月掃 3,984 份，36.82% 至少一個安全問題、13.4% 嚴重 \[4\]；Liu 等 2026 年 1 月掃 31,132 份，26.1% 至少一個漏洞、5.2% 疑似惡意，附腳本的 Skill 出問題機率是純文字的 2.12 倍 \[5\]。
 
+## 補充：多 agent 系統怎麼部署到雲端（課後自學，HTML 第 45–52 張）
+
+課堂上不講，接在「講義裡還有」之後，給想把作業小助教真的放上線的同學。每張只帶一個新名詞：容器、`langgraph.json`、遠端 MCP、`Send`、`interrupt`。對應的課後選做 notebook：[`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)（四個練習都在免費 Colab 跑，不需要真的部署）。方括號 \[11\]–\[18\] 對應文末參考來源，HTML 版放在第 54 張「參考來源（續）」。
+
+### 投影片 35｜補充：上雲端（站名頁，HTML 第 45 張）
+
+- **畫面**：站名「上雲端：把多 agent 的作業小助教，從 Colab 搬到雲端」；這一站要回答：離開 Colab 要換掉哪三樣東西？程式、手冊、腳本怎麼打包、放到哪一朵雲？200 個子 agent、寄信、資安，上線後怎麼管？
+- **互動／課後練習**：notebook 2-E（四個練習的總覽）
+
+### 投影片 36｜離開 Colab：三樣東西要換掉（HTML 第 46 張）
+
+- **畫面**：三列表格（在 Colab ／ 上雲端）
+  - 模型：`google.colab.ai` → 正式 API key，放進 Secret Manager，程式從環境變數讀
+  - 檔案：`/content/review-bot/` → 程式、`skills/`、`scripts/` 一起裝進容器
+  - 記憶：notebook 裡的 checkpointer → `PostgresSaver`，同一個 `thread_id` 重開機也接得回來 \[13\]
+- **新名詞**：容器（container）＝ 把程式和它需要的一切裝進同一個箱子，搬到哪台機器都一樣能跑
+- **互動／課後練習**：notebook 2-E 練習 4，把金鑰搬進 Colab 的「密鑰」（Secret Manager 的縮小版）
+
+### 投影片 37｜打包：langgraph.json 是出貨單（HTML 第 47 張）
+
+- **畫面**：左邊專案樹（`dual_core.py`、`deploy/app_graph.py`、`tools/`、`skills/`、`requirements.txt`、`.env`、`langgraph.json`）；右邊 `langgraph.json`（`dependencies: ["."]`、`graphs: {"review_bot": "./deploy/app_graph.py:graph"}`、`env`）與兩個指令 `langgraph dev`、`langgraph build -t review-bot` \[12\]
+- **講者**：`"."` 代表整個資料夾一起出貨，`skills/` 也會跟著進去，手冊和程式永遠同一個版本。先在本機用 `langgraph dev` 跑通，再決定搬去哪
+- **互動／課後練習**：notebook 2-E 練習 1（在 Colab 把雙核小助教包成 API 服務）、練習 4（產生 Dockerfile 與 `langgraph.json`）
+
+### 投影片 38｜放到哪一朵雲：三種做法（HTML 第 48 張）
+
+| 做法 | 例子 | 你要自己管的 | 適合 |
+| --- | --- | --- | --- |
+| 代管的 LangGraph 平台 | LangSmith Deployment（原 LangGraph Platform）\[11\] | 幾乎不用：內建 Postgres、任務佇列、Studio | 想最快上線 |
+| 自己的容器 | Cloud Run，或任何能跑 Docker 的地方 \[16\] | 資料庫、擴展、監控都自己接 | 想完全掌控、控制成本 |
+| 雲端廠商的 agent 執行環境 | Google Agent Runtime（原 Vertex AI Agent Engine）\[16\]、AWS Bedrock AgentCore \[17\] | 綁那家雲的帳號、權限與工具 | 學校或公司本來就在用那朵雲 |
+
+- **講者**：三種都跑同一份 graph，差別只在「你想自己管多少」。名稱是 2026 年 11 月查證的：LangGraph Platform 在 2025 年 10 月改名 LangSmith Deployment（需 Plus 以上方案）；Google 在 2026 年 4 月把 Vertex AI 改名 Gemini Enterprise Agent Platform、Agent Engine 改叫 Agent Runtime（LangGraph 範本仍是 preview）；AWS Bedrock AgentCore 2025 年 10 月 GA
+- **互動／課後練習**：notebook 2-E 練習 1 包出來的 API 服務，就是這三種做法裡真正在跑的那一層
+
+### 投影片 39｜五個抽屜搬上雲（HTML 第 49 張）
+
+- **畫面**：五列對照表（抽屜／在 Colab／上雲端）
+  - 程式：容器裡的 API，一個 `thread_id` 一張訂單紙
+  - Tool：還在同一個容器；`run_code` 改丟進沙箱執行 \[17\]
+  - MCP：遠端 MCP，插座是一個網址，用 Streamable HTTP 連、OAuth 登入 \[18\]
+  - Skill：跟程式一起進 git 和映像，改手冊 ＝ 發一個新版本
+  - 子 agent：用 `Send` 一次開 200 份，並設並行上限
+- **新名詞**：遠端 MCP ＝ 插座不在你的機器上，而是別人服務上的一個網址；金鑰由 OAuth 換來，不寫進程式
+
+### 投影片 40｜200 份同時批：Send（HTML 第 50 張）
+
+- **畫面**：`分派(state)` 回傳 `[Send("批一份", {"code": c}) for c in state["作業們"]]`、`add_conditional_edges("抓作業", 分派, ["批一份"])`、`config={"max_concurrency": 20}`；結果用 `Annotated[list, operator.add]` 收回來 \[14\]
+- **講者**：每份一張乾淨的桌子（第 35 張的災難不會發生）；要設並行上限，模型 API 每分鐘有上限；先算錢，多 agent 約 3–10 倍 token \[6\]
+- **新名詞**：`Send` ＝ 在流程裡說「這個節點，照這份清單一份開一個」
+- **互動／課後練習**：notebook 2-E 練習 2，用 Send 平行批 5 份作業，數模型呼叫次數、估 token
+
+### 投影片 41｜寄信前一定停下來：interrupt（HTML 第 51 張）
+
+- **畫面**：`寄信(state)` 節點裡 `答案 = interrupt({...})`，確認後 `graph.invoke(Command(resume="寄"), config={"configurable": {"thread_id": "小明-期中"}})`
+- **講者**：`interrupt` 把 State 存進 checkpointer 然後停住，等多久都可以；所以雲端一定要用 Postgres 這種不會忘記的 checkpointer \[15\]。第 38 張「寄之前一定要有人按確認」在這裡從一句話變成一行程式
+- **新名詞**：`interrupt` ＝ 流程走到這裡先停下來，等人回覆再繼續
+- **互動／課後練習**：notebook 2-E 練習 3，在假的 `send_email` 前面放 `interrupt()`，再用 `Command(resume=…)` 接著跑
+
+### 投影片 42｜上線之後：看得見、關得住（HTML 第 52 張）
+
+- **畫面**：左「看得見」：Trace、Eval 進 CI（第 26–27 張那五個 case 每次改動都自動跑）、成本；右「關得住」五個勾選框：工具最小權限、`run_code` 在沙箱跑、第三方 Skill 照 2-C 三個習慣審過並鎖版本、金鑰只放 Secret Manager、不可逆動作前一定有 `interrupt`
+- **講者**：上雲端不是換個地方跑，是把 harness 補完整：每一步看得見，每一個權限關得住
+- **互動／課後練習**：notebook 2-E 練習 4，上線前檢查（金鑰、第三方 Skill 掃描、部署檔）
+
 ## 參考來源
 
 1. [Agent Skills 官方網站](https://agentskills.io/) — Skill 的定義、運作方式、開放標準
@@ -321,3 +386,11 @@ def check_naming(state):
 8. [MCP vs Skills: When to Use Which](https://dev.to/baboon/mcp-vs-skills-when-to-use-which-for-ai-agents-nhe) — 用 Skill 包 MCP
 9. [Building agents: When to fold subagents into your main agent loop](https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop) — Anthropic，2026-10-22
 10. [Don't Build Multi-Agents](https://cognition.ai/blog/dont-build-multi-agents) — Cognition，2025 年
+11. [LangSmith Deployment](https://docs.langchain.com/langsmith/deployments) — Agent Server、Postgres 與任務佇列、Cloud／Hybrid／Self-hosted；[2025 年 10 月由 LangGraph Platform 改名](https://changelog.langchain.com/announcements/ann_NXVDQVGqbwBqW)
+12. [LangGraph：Application structure](https://docs.langchain.com/oss/python/langgraph/application-structure) — `langgraph.json` 的 dependencies、graphs、env
+13. [PostgresSaver API reference](https://reference.langchain.com/python/langgraph.checkpoint.postgres/PostgresSaver) — 用 Postgres 存 checkpoint
+14. [LangGraph：Use the graph API（Map-reduce and the Send API）](https://docs.langchain.com/oss/python/langgraph/use-graph-api)
+15. [LangGraph：Human-in-the-loop](https://docs.langchain.com/oss/python/langgraph/human-in-the-loop) — `interrupt`、`Command(resume=…)`、production 用 durable checkpointer
+16. [Cloud Run：Host AI agents](https://docs.cloud.google.com/run/docs/ai-agents) 與 [Agent Runtime（Gemini Enterprise Agent Platform）](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/runtime)
+17. [Amazon Bedrock AgentCore is now generally available](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available) — AWS，2025-10-13
+18. [Is that allowed? Authentication and authorization in Model Context Protocol](https://stackoverflow.blog/2026/01/21/is-that-allowed-authentication-and-authorization-in-model-context-protocol/) — Stack Overflow Blog，2026-01-21

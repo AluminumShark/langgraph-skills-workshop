@@ -6,7 +6,7 @@
 
 ### 投影片 1｜封面
 
-- **畫面**：從 LangGraph 到 Skills：結構化與非結構化 Agent 的雚拼指南｜第 1 堂：什麼是 agent，用 LangGraph 做一個；講者李維、柯宥圻；NTU AI Club
+- **畫面**：從 LangGraph 到 Skills：結構化與非結構化 Agent 的雚拼指南｜第 1 堂：什麼是 agent，用 LangGraph 做一個；講者李維、柯宥圻；NTU AI Club；日期 2026-11-09（週一）；右側「課程資料」QR code 指向 https://github.com/AluminumShark/langgraph-skills-workshop
 - **講者**：自我介紹 30 秒，請大家先打開 notebook 連結並「複製到雲端硬碟」
 
 ### 投影片 2｜今天你會學到三件事
@@ -232,8 +232,8 @@ agent = create_agent(model, tools=[run_code, check_indent, read_spec],
 
 ### 投影片 25｜它會繞圈：recursion limit
 
-- **畫面**：講師示範一個故意會一直失敗的工具，agent 連續呼叫 25 次後被 LangGraph 停下來，印出錯誤
-- **講者**：Agent 可能一直轉圈出不來。LangGraph 預設跑 25 步就停 \[8\]。這是今天第一個「用程式限制 AI」的例子，下一段會講更多。
+- **畫面**：講師示範一個故意會一直失敗的工具，agent 一直呼叫它，跑到第 25 步被 LangGraph 停下來，印出 `GraphRecursionError`
+- **講者**：Agent 可能一直轉圈出不來。所以我們在程式裡設 `recursion_limit=25`，跑到 25 步就強制停。注意：LangGraph 1.0 預設就是 25；從 1.1 版起預設放寬到 10007 步（環境變數 `LANGGRAPH_DEFAULT_RECURSION_LIMIT`），不設的話它會繞很久、一直燒 token。這是今天第一個「用程式限制 AI」的例子，下一段會講更多。
 
 ### 投影片 26｜Tool 從哪裡來：自己寫的函式 vs MCP 插座
 

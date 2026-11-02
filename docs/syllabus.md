@@ -8,6 +8,8 @@ Oct 30, 2026 · @Levi
 
 - **中文名稱**：從 LangGraph 到 Skills：結構化與非結構化 Agent 的雙拼指南
 - **英文名稱**：Agents in 2026: Mastering LangGraph & SKILL.md
+- **上課日期**：第 1 堂 2026-11-09（週一）、第 2 堂 2026-11-16（週一），各 120 分鐘
+- **課程資料**：[github.com/AluminumShark/langgraph-skills-workshop](https://github.com/AluminumShark/langgraph-skills-workshop)（notebook 都有 Open in Colab 連結）
 - **一句話介紹**：先弄懂 AI agent 到底是什麼，再親手看它在 LangGraph 的流程裡怎麼跑、在 Skill 的說明書下怎麼變聰明，最後學會判斷哪些事該用程式鎖死、哪些事該交給 AI 判斷。
 - **範例專案**：作業小助教 review-bot。輸入一段 Python 作業，輸出一份固定格式的回饋。選它是因為流程順序重要、輸出能用程式檢查、又需要領域知識，三種零件都用得到。
 - **實作環境**：Google Colab。LLM 呼叫優先用內建的 `google.colab.ai`（免費帳號不需要 API key，但有用量上限），不足時改用講師的 API key。學生只做三件事：按執行、改表單欄位裡的文字或數字、先預測再比對輸出。
@@ -58,7 +60,7 @@ Oct 30, 2026 · @Levi
 | 8 | 每個節點只寫自己的欄位 | 原提案 | 看 `stream_mode="values"` 的逐步輸出，訂單紙一格一格被填滿。 |
 | 9 | 三個設計模式 | 新 | Prompt chaining（串接）、routing（分流）、evaluator-optimizer（產出 + 檢查 + 退回重做），出自 Anthropic〈Building effective agents〉。 |
 | 10 | LangChain 1.0 的 `create_agent` | 新 | 2025 年 10 月起，LangChain 的標準 agent 寫法是 `create_agent(model, tools)`，它底下自動幫你畫好「模型節點 ↔ 工具節點」的迴圈，回傳的就是一個 LangGraph。所以 LangGraph 和 LangChain 不是對手，是上下層。 |
-| 11 | Recursion limit 與 checkpointer | 新 | Agent 可能繞圈不停，LangGraph 預設跑 25 步就停。Checkpointer 加 `thread_id` 可以把 State 存起來，下次接著跑，這就是原提案說的「state 未丟失」。 |
+| 11 | Recursion limit 與 checkpointer | 新 | Agent 可能繞圈不停，所以要設 `recursion_limit`（notebook 1-B 設 25 步就停）。注意：LangGraph 1.0 預設是 25；從 1.1 起預設放寬到 10007，不設就會繞很久。Checkpointer 加 `thread_id` 可以把 State 存起來，下次接著跑，這就是原提案說的「state 未丟失」。 |
 | 12 | 0.99 的 10 次方 | 新 | 每步 99% 成功的 10 步流程，整體只剩約 90%；每步 95% 只剩約 60%。所以要在中間放檢查站。 |
 | 13 | Harness：Agent = Model + Harness | 新 | 模型是馬，harness 是韁繩和馬鞍。流程圖、檢查節點、說明書都是 harness。2026 年業界的共識是 harness 常常比模型更決定成敗。 |
 
@@ -299,6 +301,10 @@ Anthropic 2026 年 1 月的指引（出處見參考資料）：
 | 例：一次批 200 份 | 5 子 agent（平行） | 問 5：彼此獨立 |
 | 例：驗證回饋沒有亂講 | 5 子 agent（驗證） | 問 6：可獨立驗證 |
 
+### 補充：多 agent 系統怎麼部署到雲端（課後自學）
+
+第 2 堂簡報第 45–52 張（參考來源在第 54 張），課堂上不講，給想把作業小助教真的放上線的同學。內容依序是：離開 Colab 要換掉的三樣東西（模型金鑰改放 Secret Manager、檔案改裝進容器、checkpointer 改用 Postgres）；用 `langgraph.json` 打包、`langgraph dev` 本機跑通；三種上雲做法（LangSmith Deployment、自己的容器如 Cloud Run、Google Agent Runtime 或 AWS Bedrock AgentCore）；五個抽屜搬上雲後各變成什麼（含遠端 MCP）；用 `Send` 平行批 200 份並設並行上限、先算成本；寄信前用 `interrupt()` 人工確認；上線後的 trace、eval 進 CI 與權限清單。對應的課後選做 notebook 是 [`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)，四個練習都在免費 Colab 跑，不需要真的部署。
+
 ## 講師準備的 Colab notebook
 
 學生只執行、不寫程式，notebook 本身就是教材。每一段照「預測 → 執行 → 比對」設計。
@@ -312,6 +318,7 @@ Anthropic 2026 年 1 月的指引（出處見參考資料）：
 | `2-B_code_text_script.ipynb` | 第 2 堂 0:35 | 不用改，執行三個版本並比對 |
 | `2-C_security.ipynb` | 第 2 堂 1:05 | 不用改，找出藏指令的行 |
 | `2-D_dual_core.ipynb` | 第 2 堂 1:25 | thread\_id |
+| `2-E_deploy.ipynb`（課後選做） | 第 2 堂補充：上雲端 | 選做四個練習：API 服務、平行批改、寄信前確認、上線前檢查 |
 
 Notebook 執行後在 `/content/review-bot/` 產生的檔案：
 
