@@ -5,3 +5,14 @@ __pycache__/
 .venv/
 .DS_Store
 notebooks/*.executed.ipynb
+
+# Colab / 本機驗證時產生的檔案
+review-bot/history.jsonl
+review-bot/checkpoints.sqlite*
+review-bot/.llm.json
+review-bot/**/*.sqlite*
+review-bot/deploy/.port
+review-bot/寄件匣.txt
+review-bot/2B_results.json
+review-bot/作業.py
+review-bot/.env
