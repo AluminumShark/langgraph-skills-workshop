@@ -29,7 +29,7 @@
 | 第 2 堂 0:28 | **2-B 程式・文字・腳本**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-B_code_text_script.ipynb) | 同一個檢查放進手冊文字、腳本、流程節點，各跑三次比比看 | 不用改，執行三個版本並比對 | 第 2 堂 13–19 |
 | 第 2 堂 0:58 | **2-C 資安**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-C_security.ipynb) | 別人寫的手冊可能藏著壞指令（prompt injection） | 不用改，找出藏指令的那一行 | 第 2 堂 21–23 |
 | 第 2 堂 1:06 | **2-D 雙核**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-D_dual_core.ipynb) | 外面用流程鎖住順序，裡面讓 agent 帶著手冊判斷；State 存檔後能接著跑 | thread_id | 第 2 堂 24–27 |
-| 課後選做 | **2-E 上雲端前的準備**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb) | 把小助教包成服務、平行批改、寄信前人工確認、上線前檢查 | 依各段說明 | 第 2 堂 45–52（補充） |
+| 課後選做 | **2-E 上雲端前的準備**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb) | 把小助教包成服務、平行批改、寄信前人工確認、上線前檢查 | 依各段說明 | 第 2 堂 47–54（補充）；部署地圖在 41 |
 
 > 時間不夠時，必做的是 1-A、1-B、2-A；2-B 可以改成看講師示範；2-E 是課後自己玩的。
 

@@ -5,7 +5,7 @@ NTU AI Club 技術工作坊，兩堂各 120 分鐘。講者：李維（Levi, @Al
 ## 這個 repo 的狀態
 
 - 上課日期：第 1 堂 2026-11-09（一）、第 2 堂 2026-11-16（一）。公開 repo：`AluminumShark/langgraph-skills-workshop`。
-- `slides/session1.html`、`slides/session2.html`：兩堂課的簡報，**已完成**，單一 HTML，只依賴 Google Fonts。← → 換頁、N 看講者備註、F 全螢幕。已填日期與 repo 連結；第 1 堂投影片 36 已修正 recursion limit（1.1 起預設 10007，notebook 自己設 25）；第 2 堂多了「上雲端」補充（投影片 45–52，對應 2-E），參考來源在 53–54。每頁底部的進度列是靜態 markup，增刪投影片時要整份重新產生。
+- `slides/session1.html`、`slides/session2.html`：兩堂課的簡報，**已完成**，單一 HTML，只依賴 Google Fonts。← → 換頁、N 看講者備註、F 全螢幕。已填日期與 repo 連結；第 1 堂投影片 36 已修正 recursion limit（1.1 起預設 10007，notebook 自己設 25）；第 2 堂主線多了「RAG 放哪裡」（投影片 34）和「部署地圖」（投影片 41），「上雲端」補充在投影片 47–54（對應 2-E），參考來源在 55–56。每頁底部的進度列是靜態 markup，增刪投影片時要整份重新產生。
 - `docs/syllabus.md`：完整課綱（時間表、觀念清單、notebook 規格、最低完成標準）。**任何實作都以它為準。**
 - `docs/slides-session{1,2}-outline.md`：投影片逐張大綱，含每張的「互動／停一下」，notebook 的段落要對得上。
 - `docs/reuse-from-old-workshop.md`：從舊教案 `reference/old-workshop/` 抄出來、已改成 review-bot 語境的程式碼，每段標了該放哪本 notebook。
