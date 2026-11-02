@@ -14,26 +14,26 @@ SUPPORT = [
 def cells():
     return [
         md(f"""
-        # 2-D：雙核小助教：外面鎖住順序、裡面放手判斷
+        # 2-D：流程與 Agent 整合
 
         {badge(NAME)}
 
-        > 📍 **對應簡報**：第 2 堂「第三站：資安與雙核」，投影片 **25–27**；選讀 **44–45**（課堂時間 1:08–1:23）
+        > 📍 **對應簡報**：第 2 堂「第三站：資安與流程整合」，投影片 **25–27**；選讀 **44–45**（課堂時間 1:08–1:23）
         """),
-        project_intro("把小助教的流程、agent、手冊和腳本接在一起，做成「雙核」小助教，並讓它中斷之後還能接著跑。"),
+        project_intro("把小助教的流程、agent、手冊和腳本接在一起，做成結合固定流程與 Agent 的小助教，並讓它中斷之後還能接著跑。"),
         md("""
         ## 這本 notebook 在做什麼
 
         小助教可以用兩種方式做：
 
         - **流程（workflow）**：路線用程式畫好（LangGraph）。先檢查語法；語法通過才寫回饋、檢查格式。不合格可退回重寫，達次數上限就停止。
-          很穩定，但只能處理事先想到的情況。（第 1 堂 1-A）
+          分支與順序明確；遇到未處理的情況，仍需補上流程規則。（第 1 堂 1-A）
         - **agent**：只給 AI 目標和一個工具箱，讓它自己決定用哪些工具、用幾次。很有彈性，但每次走的路可能不同。（第 1 堂 1-B）
 
-        這本把兩種套在一起，就是課名裡的「**雙拼**」，我們叫它**雙核**：
+        這本把固定流程與 agent 接在一起，就是課名裡「**雙拼**」的做法：
 
         - **外面**是流程（分支與順序由程式控制）：先檢查語法；通過才進 agent；回饋必須檢查格式，達生成上限會停止，可能仍不合格。
-        - **裡面**的 `give_feedback`（寫回饋）這一站，是一個小 agent（放手判斷）：
+        - **裡面**的 `give_feedback`（寫回饋）這一站，是一個小 agent（由 AI 判斷）：
           手冊用 2-A 的「溫和鼓勵」或「嚴格審查」，工具箱裡有 2-B 的命名檢查腳本 `check_naming`、`run_code`（執行作業）、`read_spec`（讀題目要求）。
           要不要檢查命名、要不要讀題目，由它自己決定。
         - 新零件 `skill_loader`：流程裡的一站，看所有手冊的**名片**（`SKILL.md` 開頭的 name 和 description），挑一本，把內文交給下一站。
@@ -42,7 +42,7 @@ def cells():
 
         | 段落 | 你會看到什麼 | 對應投影片 |
         | --- | --- | --- |
-        | 第 1 段 | 寫出 `dual_core.py`，畫出雙核的流程圖 | 25–26 |
+        | 第 1 段 | 寫出 `dual_core.py`，畫出整合後的流程圖 | 25–26 |
         | 第 2 段 | 完整跑一次：外層一站一站走，裡面的 agent 自己選工具 | 25–26 |
         | 第 3 段 | 中斷：跑到一半先停，State 存進存檔 | 27 |
         | 第 4 段 | ⭐ 接著跑：同一個 thread_id 接著跑、換一個 thread_id 從空白開始 | 27 |
@@ -53,18 +53,19 @@ def cells():
 
         1. 先執行 **「0. 環境設定」**（這一格會準備**全新預設副本**；不會匯入你在前一本 notebook 修改的手冊、腳本或工具）。
         2. 這本要改的只有 **thread_id**（第 3、4 段的表單）。其他表單想改也可以。
-        3. 每一段：**🤔 先寫預測 → ▶ 執行 → 👀 對照**；第 3、4 段先看存檔狀態再動作；想重新實驗請換一個從未使用的 thread_id。課堂約 15 分鐘，先完成第 1–4 段，第 5 段快速看歷程，第 6 段留課後。
+        3. 環境設定與準備格會覆寫其中的手冊、腳本與程式，請先保留自行修改的內容；它們不會刪除既有的 SQLite 存檔。
+        4. 每一段：**🤔 先寫預測 → ▶ 執行 → 👀 對照**；第 3、4 段先看存檔狀態再動作；想重新實驗請換一個從未使用的 thread_id。課堂約 15 分鐘，先完成第 1–4 段，第 5 段快速看歷程，第 6 段留課後。
         """),
         setup(NAME, support=SUPPORT),
         md("""
         ---
-        ## 第 1 段：雙核長什麼樣
+        ## 第 1 段：流程與 Agent 如何配合
 
         > 📍 **對應簡報**：投影片 25「把流程、手冊與工具接起來」、投影片 26「雙拼的兩個接點」
 
-        先看雙核的整體長相。下一格寫出 `dual_core.py`（不用改，直接執行）。想看程式的話，重點在三個地方：
+        先看整合後的流程圖。下一格寫出 `dual_core.py`（不用改，直接執行）。想看程式的話，重點在三個地方：
 
-        - `建立雙核小助教`：外層的節點（每一站）和箭頭，跟 1-A 的流程幾乎一樣，只多了 `skill_loader` 這一站
+        - `建立整合小助教`：外層的節點（每一站）和箭頭，跟 1-A 的流程幾乎一樣，只多了 `skill_loader` 這一站
         - `建立_skill_loader`：把所有手冊的**名片**給模型看，挑一本，把內文放進 State 的 `skill`
         - `建立_give_feedback`：裡面用 `create_agent`（一行做出 agent 的寫法）做一個小 agent，
           手冊當它的 system prompt（每次都放在最前面、告訴 AI 要遵守什麼的那段話），工具箱有 `check_naming`、`run_code`、`read_spec`
@@ -75,17 +76,17 @@ def cells():
         """),
         writefile("dual_core.py"),
         code("""
-        #@title ▶ 執行：畫出雙核的外層流程圖
+        #@title ▶ 執行：畫出整合版小助教的外層流程圖
         {PREAMBLE}
         import dual_core
 
-        小助教 = dual_core.建立雙核小助教(model)
+        小助教 = dual_core.建立整合小助教(model)
         顯示流程圖(小助教)
         """),
         md("""
         ### 👀 你看到了什麼
 
-        - `skill_loader` 在 `check_syntax`（語法 OK）和 `give_feedback` 中間：先檢查語法、再挑手冊、再給回饋、再檢查格式。**這個順序是程式鎖死的。**
+        - `skill_loader` 在 `check_syntax`（語法 OK）和 `give_feedback` 中間：語法通過後才挑手冊、給回饋、檢查格式；語法錯誤直接解釋後結束。**這條分支的順序由流程控制。**
         - 流程圖上看不到 agent 會叫哪些工具，因為那是 `give_feedback` 這一站**裡面**的事，由 AI 當下決定。
           外面保證執行必要檢查，裡面保留判斷空間：這就是雙拼。
         """),
@@ -101,7 +102,7 @@ def cells():
 
         | 路徑 | 輸出與狀態 |
         | --- | --- |
-        | 語法錯誤 | 程式產生「語法：／改進：」，不進 agent |
+        | 語法錯誤 | 程式產生「語法：／改進：」，不進 agent，也不跑格式檢查 |
         | 語法通過、回饋格式合格 | 回饋採「優點：／改進：」，format_ok=True |
         | 生成到上限仍不合格 | 保留最後一版供檢查，format_ok=False，不把它當成功結果 |
 
@@ -111,7 +112,7 @@ def cells():
         3. 如果它寫的回饋太長，誰會把它退回去？
         """),
         code(f"""
-        #@title ▶ 執行：雙核小助教，一站一站跑
+        #@title ▶ 執行：整合版小助教，一站一站跑
         作業 = "命名不一致"  #@param {作業選項}
         批改需求 = "幫第一次交作業的初學者看看"  #@param {需求選項} {{allow-input: true}}
         回饋字數上限 = 250  #@param {{"type":"integer"}}
@@ -121,7 +122,7 @@ def cells():
         import time
         import dual_core
 
-        小助教 = dual_core.建立雙核小助教(model, checkpointer=dual_core.開存檔(),
+        小助教 = dual_core.建立整合小助教(model, checkpointer=dual_core.開存檔(),
                                          最多重試次數=最多生成次數, 回饋字數上限=回饋字數上限)
         config = {{"configurable": {{"thread_id": f"完整示範-{{time.time_ns()}}"}}}}
         state = dual_core.逐站執行(小助教, {{"code": 取得作業(作業), "request": 批改需求, "retries": 0}}, config)
@@ -139,10 +140,10 @@ def cells():
         md("""
         ### 👀 你看到了什麼
 
-        - 語法通過：`check_syntax → skill_loader → give_feedback → check_format`；格式不合格且還沒到上限才回到 `give_feedback`。
-        - 語法未通過：`check_syntax → explain_error → 結束`，不選手冊、不呼叫模型。把作業改成「少了右括號」觀察這條分支。
+        - 語法通過：`check_syntax → skill_loader → give_feedback → check_format`；格式不合格且還沒到生成上限才回到 `give_feedback`。
+        - 語法未通過：`check_syntax → explain_error → 結束`，不選手冊、不呼叫模型，也不經過 check_format。只把作業改成「少了右括號」觀察這條分支；之後先改回「命名不一致」。
         - 手冊選擇、工具使用與回饋內容仍由模型決定。必要檢查有執行，不代表結果一定合格。
-        - 額外試一次：字數上限設為 **1**、最多生成次數（含第一次）設為 **1**。兩段格式無法塞進一字，應看到「達上限，格式仍不合格」。試完恢復 **250／3**。
+        - 選做上限對照：作業先恢復「命名不一致」，需求固定初學者，最多生成次數設為 **1**、字數上限 **250**，執行一次作為基準。第二輪**只把字數上限改為 1**。兩段格式無法塞進一字，應看到「達上限，格式仍不合格」。做完恢復 **250／3**。
         - `retries` 是內部欄位名稱，這份實作每寫一次回饋就加一，**包括第一稿**；課堂把它讀成「已生成次數」。
         """),
         md("""
@@ -156,7 +157,7 @@ def cells():
         **checkpointer** 會在每一站跑完時把整張訂單紙（State）存起來；**thread_id** 是這份存檔的編號，像置物櫃的號碼。
         這裡的存檔放在 `/content/review-bot/checkpoints.sqlite` 這個檔案裡，只要這個檔案還在，重跑 cell 就能讀回。Colab 刪除或更換執行階段可能移除本機檔案；檔案不在時就沒有舊存檔。
 
-        下面這格會在 `give_feedback` **前面**故意停下來（模擬跑到一半斷線）。
+        本段先固定使用語法正確的「命名不一致」與初學者需求。使用全新 thread_id 時，下面這格會在 `give_feedback` **前面**暫停。這是可預期的教學中斷，不是實際模擬斷線後的所有恢復情況；語法錯誤會走另一條分支，無法停在這裡。
 
         ### 🤔 預測題
         停下來的時候，存檔裡的 State 會有哪幾格已經填好？`feedback` 有內容嗎？
@@ -169,7 +170,7 @@ def cells():
         {{PREAMBLE}}
         import dual_core
 
-        小助教 = dual_core.建立雙核小助教(model, checkpointer=dual_core.開存檔(), interrupt_before=["give_feedback"])
+        小助教 = dual_core.建立整合小助教(model, checkpointer=dual_core.開存檔(), interrupt_before=["give_feedback"])
         config = {{"configurable": {{"thread_id": thread_id}}}}
         舊存檔 = 小助教.get_state(config)
         if 舊存檔.values:
@@ -186,7 +187,7 @@ def cells():
         md("""
         ### 👀 你看到了什麼
 
-        - 停在 `give_feedback` 前面：`syntax_ok`、`skill_name` 已經填好，`feedback` 還是空的。
+        - 使用全新編號和預設作業時，停在 `give_feedback` 前面：`syntax_ok`、`skill_name` 已經填好，`feedback` 還是空的。
         - 「下一站」是 `('give_feedback',)`：存檔不只記得 State，也記得**流程走到哪裡**。
         """),
         md(f"""
@@ -217,7 +218,7 @@ def cells():
         {{PREAMBLE}}
         import dual_core
 
-        小助教 = dual_core.建立雙核小助教(model, checkpointer=dual_core.開存檔())
+        小助教 = dual_core.建立整合小助教(model, checkpointer=dual_core.開存檔())
         config = {{"configurable": {{"thread_id": thread_id}}}}
         存檔 = 小助教.get_state(config)
 
@@ -231,12 +232,15 @@ def cells():
             state = dual_core.逐站執行(小助教, None, config)      # 輸入 None ＝ 從存檔接著跑
             狀況 = "找到存檔，接著跑"
         else:
-            print(f"✅ thread_id「{{thread_id}}」已經跑完了，存檔內容如下（想重來就換一個 thread_id）\\n")
+            print(f"📂 thread_id「{{thread_id}}」已經跑完了，存檔內容如下（想重來就換一個 thread_id）\\n")
             state = 存檔.values
             狀況 = "已經跑完"
 
         print("\\n========== 現在的 State ==========")
         印出狀態({{k: v for k, v in state.items() if k not in ("skill", "code")}})
+        print("最新存檔的下一站：", 小助教.get_state(config).next or "（流程已結束）")
+        print("結果判讀：", "語法未通過，未進行回饋格式檢查" if state.get("syntax_ok") is False else
+              "回饋格式通過；內容仍需檢視" if state.get("format_ok") else "回饋格式未通過，流程結束不代表成功")
         記下(f"2-D 第 4 段：{{狀況}}（thread_id={{thread_id}}）", {{k: v for k, v in state.items() if k != "skill"}})
         """),
         md("""
@@ -244,7 +248,7 @@ def cells():
 
         - **同一個尚未完成的 thread_id**：從 `give_feedback` 接著跑，`check_syntax` 和 `skill_loader` 沒有重跑，`skill_name` 是存檔裡原本那一本。**State 沒有丟失。**
         - **換一個從未使用的 thread_id**：存檔裡什麼都沒有，State 從空白開始，整條流程從 `check_syntax` 重新跑。
-        - 同一個 thread_id 跑完之後再執行一次，會看到「已經跑完」：這次只顯示原結果。換編號只是查另一份存檔，並不刪除原本那份。
+        - 這裡「已完成」只表示流程沒有下一站，不表示作業或回饋合格。相同 thread_id 跑完之後再執行一次，會看到「已經跑完」：這次只顯示原結果。換編號只是查另一份存檔，並不刪除原本那份。
         - **完成檢查**：指出輸出中的存檔編號、下一站與 skill_name，說明三輪是否重新挑選手冊。要從空白重設，兩格一起換全新編號。
         """),
         md("""
@@ -264,7 +268,7 @@ def cells():
         {PREAMBLE}
         import dual_core
 
-        小助教 = dual_core.建立雙核小助教(model, checkpointer=dual_core.開存檔())
+        小助教 = dual_core.建立整合小助教(model, checkpointer=dual_core.開存檔())
         config = {"configurable": {"thread_id": thread_id}}
         歷史 = list(小助教.get_state_history(config))
         if not 歷史:
@@ -291,7 +295,7 @@ def cells():
 
         > 📍 **對應簡報**：選讀投影片 44–45：驗證與實際通過率
 
-        這個附錄換了一個系統：**純 agent**，不是前面第 1–5 段的雙核；它把 check_syntax 也放進可選工具箱。若沒有外層流程，怎麼知道它有沒有照規矩做？答案是**考它**。
+        這個附錄換了一個系統：**純 agent**，不是前面第 1–5 段的整合版小助教；它把 check_syntax 也放進可選工具箱。若沒有外層流程，怎麼知道它有沒有照規矩做？答案是**考它**。
 
         把「agent 應該怎麼做」寫成程式能自動批改的考題，叫做 **eval**（評測）。這裡有五個考題（eval case），
         每題檢查兩件事：**第一個該叫哪個工具**、**最後的回覆要有哪些字**。考卷是程式在改，不是人在看。我們比較兩個版本的 system prompt：
@@ -374,7 +378,7 @@ def cells():
         - 先記下 baseline 與 v2 各過幾題、失敗原因。baseline 也可能全部通過，請照實記錄。
         - v2 可能提升、相同或降低；五題的一次結果只代表這次測試。關鍵字命中也不代表回饋正確，還需人工抽查內容。
         - 再往前一步：把「第一個一定要 check_syntax」直接寫成**外層流程的順序**、把「一定要有優點和改進」寫成 `check_format` 節點，
-          能保證這些檢查會被執行，也不需要模型判斷檢查結果。雙核仍要測分支、上限、存檔接續與回饋品質，並非不需要 eval。
+          能讓流程按分支執行必要檢查：語法錯誤不進回饋與格式檢查；語法通過後的回饋才檢查格式。檢查本身由程式判定。整合版仍要測分支、上限、存檔接續與回饋品質，並非不需要 eval。
         """),
         *ending(),
     ]

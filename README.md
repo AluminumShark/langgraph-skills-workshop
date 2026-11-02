@@ -7,10 +7,10 @@
 你不用自己寫程式，全程都在 Google Colab 上執行講師準備好的 notebook，
 主要做三件事：**先預測、按執行、對照結果**；需要修改時，只改表單或指定的手冊文字。
 
-我們會一起做一個「**作業小助教**」：輸入 Python 作業，先檢查語法；通過後產生含「優點／改進」的回饋。
+我們會一起做一個「**作業小助教**」。流程版先檢查 Python 作業的語法：有錯就回報，通過才請 AI 產生「優點／改進」回饋並檢查格式。
 語法通過不代表執行成功，也不代表符合題目要求；達到生成次數上限而停止，也不代表回饋合格。
 第 1 堂先弄懂 AI agent 是什麼，用 LangGraph 親眼看「路線由程式決定」和「路線由 AI 決定」的差別；
-第 2 堂學 Agent Skills（給 AI 的工作手冊），最後把兩者接在一起，變成「雙核」的小助教。
+第 2 堂學 Agent Skills（給 AI 的工作手冊），最後把兩者接在一起，做出結合固定流程與 Agent 的小助教。
 
 | 堂次 | 日期 | 長度 | 主題 |
 | --- | --- | --- | --- |
@@ -24,12 +24,12 @@
 | 堂／段落時間 | Notebook | 你會學到什麼 | 你要改什麼 | 對應投影片 |
 | --- | --- | --- | --- | --- |
 | 第 1 堂 0:10 | **1-0 Tool calling**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-0_tool_calling.ipynb) | 模型只會「說」它想用哪個工具，真正做事的是你的程式 | 看模型回覆、工具請求與結果交接 | 第 1 堂 5–14；選讀 42 |
-| 第 1 堂 0:35 | **1-A Workflow**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-A_workflow.ipynb) | 用 State、Node、Edge 追蹤分支，辨識停止原因 | 作業、回饋最多產生次數、回饋字數上限 | 第 1 堂 15–26；選讀 43 |
+| 第 1 堂 0:35 | **1-A Workflow**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-A_workflow.ipynb) | 用 State、Node、Edge 追蹤分支，辨識停止原因 | 作業、最多生成次數、回饋字數上限 | 第 1 堂 15–26；選讀 43 |
 | 第 1 堂 1:10 | **1-B Agent**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-B_agent.ipynb) | 先試工具，再建立 agent；MCP 由講師示範 | 作業、system prompt 裡的一句話 | 第 1 堂 28–36；選讀 44 |
 | 第 2 堂 0:08 | **2-A Skills**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-A_skills.ipynb) | 分開觀察換需求選手冊、改正文、改名片 | 指定的 SKILL.md 規則與 description | 第 2 堂 5–12 |
 | 第 2 堂 0:28 | **2-B 程式・文字・腳本**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-B_code_text_script.ipynb) | 同一規則比較文字、agent 選腳本、流程直接執行 | 不改程式，先預測再比對實際結果 | 第 2 堂 13–19 |
 | 第 2 堂 0:58 | **2-C 資安**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-C_security.ipynb) | 比較同一手冊有／無工具權限；找出惡意行 | 不改程式，記錄工具與假資料的結果 | 第 2 堂 21–24 |
-| 第 2 堂 1:08 | **2-D 雙核**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-D_dual_core.ipynb) | 接合流程與手冊；辨識存檔三種狀態 | thread_id；比較續跑、完成取回與新執行 | 第 2 堂 25–27；選讀 44–45 |
+| 第 2 堂 1:08 | **2-D 流程與 Agent 整合**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-D_dual_core.ipynb) | 接合流程與手冊；辨識存檔三種狀態 | thread_id；比較續跑、完成取回與新執行 | 第 2 堂 25–27；選讀 44–45 |
 | 課後選做 | **2-E 上雲端前的準備**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb) | 先跑一份，再做批次、分工、API 與部署前檢查 | 依各段前置步驟操作 | 第 2 堂 48–56（補充） |
 
 > 時間不足時，2-B 可看講師示範再讀紀錄回答；仍保留 2-C 的工具權限對照與 2-D 的存檔三種狀態。2-E、重複 eval、RAG 與部署是課後選做。
@@ -58,11 +58,11 @@
 7. **最後三格：存檔與交作業**
    - 💾 存到 Google 雲端硬碟：把你改過的檔案和執行紀錄存一份
    - ⬇️ 下載 zip：直接下載到電腦
-   - 📸 印出整份 State 歷程：把這本 notebook 跑過的每一步印出來，**截圖就能交作業**
+   - 📸 印出已記錄的實驗結果：依標題挑選相關紀錄截圖，並補上作業要求的觀察與理由
 
 ## 模型從哪裡來？
 
-- **預設：Colab 內建模型（`google.colab.ai`）**。免費帳號就能用，**不需要 API key**，但有用量上限。
+- **預設：Colab 內建模型（`google.colab.ai`）**。這個模式不另外填 API key；可用性與額度依帳號而定，請先跑環境設定確認。
 - **備案：講師提供的 Gemini API key**。如果內建模型的額度用完，或課堂上講師說要換：
   1. 點 Colab 左邊的 🔑「**密鑰**」，新增一個名稱為 `GOOGLE_API_KEY` 的密鑰，值貼上講師給的 key，並打開「notebook 存取權」
   2. 在「0. 環境設定」的表單把 **模型來源** 改成 `gemini`，重新執行那一格
@@ -86,7 +86,7 @@ Colab 內建模型有免費用量上限。可以等一下再試、兩個人共�
 `run_code` 會執行作業，因此範例加上模組限制與 3 秒逾時，並縮短錯誤輸出。這些是課堂示範的限制措施，不能當成完整的安全沙箱；只使用課堂範例或自己信任的作業。
 
 **我改了 SKILL.md，可是 AI 的回饋沒有變？**
-改完記得**執行那一格**（`%%writefile` 那格），檔案才會存入；再執行使用它的實驗。確認實際選到哪本手冊，並固定作業和需求。2-A 的三個實驗分別觀察「換手冊」「改正文」「改 description」，不要同時改多項。
+改完記得**執行那一格**（`%%writefile` 那格），檔案才會存入；再執行使用它的實驗。2-A 分開觀察「只改需求如何影響選書」「固定手冊後改正文」「固定需求後改 description」，每個實驗一次只改一項。
 
 **我看不到表單，只看到一堆程式碼？**
 可能是用 GitHub 或 Jupyter 直接打開的。請用表格裡的 **Open in Colab** 打開，表單和收合只有在 Colab 裡才會出現。
@@ -134,7 +134,7 @@ langgraph-skills-workshop/
 
 ## 給講師／想改教材的人
 
-本機環境用 [uv](https://docs.astral.sh/uv/) 管理（Python 3.12，和 Colab 相同）。先安裝相依套件：
+本機環境用 [uv](https://docs.astral.sh/uv/) 管理（Python 3.12；Colab 版本以執行階段為準）。先安裝相依套件：
 
 ```bash
 uv sync

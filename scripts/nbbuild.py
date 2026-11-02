@@ -4,7 +4,7 @@
 - code()      ：程式格（預設收合成表單，第一行必須是 #@title）
 - writefile() ：%%writefile 格，內容直接讀 review-bot/ 裡的講師版原始碼，保證兩邊一模一樣
 - setup()     ：每本第一格「0. 環境設定」：裝套件（uv）、選模型來源、寫出共用檔案
-- ending()    ：每本最後三格：存雲端硬碟、下載 zip、印出整份 State 歷程
+- ending()    ：每本最後三格：存雲端硬碟、下載 zip、印出已記錄的實驗結果
 """
 
 from __future__ import annotations
@@ -91,7 +91,7 @@ def setup(name: str, support: list[str] = (), extra: str = "", packages: list[st
     embedded = "\n".join(_embed(f) for f in files)
     pkgs = " ".join(f'"{p}"' for p in [*PACKAGES, *packages])
     src = f'''#@title 0. 環境設定（第一次打開、或執行階段重設後執行）
-#@markdown **模型來源**：`colab` ＝ Colab 內建模型（免費、不用 API key）；`gemini` ＝ 講師提供的 Gemini API key（備案）
+#@markdown **模型來源**：`colab` ＝ Colab 內建模型（不另填 API key；可用性與額度依帳號）；`gemini` ＝ 講師提供的 Gemini API key（備案）
 模型來源 = "colab"  #@param ["colab", "gemini"]
 #@markdown 選 `gemini` 時：建議在左邊 🔑「密鑰」新增 `GOOGLE_API_KEY`；也可以把 key 貼在下面（⚠️ 貼了就不要把 notebook 分享出去）
 講師_API_KEY = ""  #@param {{type:"string"}}
@@ -155,7 +155,7 @@ def project_intro(這本: str):
 
     | 小助教需要的 | 例子 | 我們用什麼做 |
     | --- | --- | --- |
-    | 順序不能錯的步驟 | 一定要先確認程式的「文法」沒錯，才給回饋 | 用程式畫好的**流程**（LangGraph，第 1 堂） |
+    | 由流程控制的步驟 | 先檢查語法；有錯就回報，通過才產生回饋並檢查格式 | 用程式定義**流程**（LangGraph，第 1 堂） |
     | 需要判斷的事 | 回饋怎麼寫、要不要真的執行程式看看 | 交給 **AI**（agent，第 1 堂） |
     | 做法和規矩 | 回饋的語氣要溫和還是嚴格、好的變數名稱長什麼樣 | 寫成給 AI 看的**手冊**（Skill，第 2 堂） |
 
@@ -167,8 +167,8 @@ def project_intro(這本: str):
     | --- | --- |
     | `check_syntax`（檢查語法） | 只看程式的「文法」對不對，例如括號有沒有關好、冒號有沒有漏；**不會執行程式** |
     | `explain_error`（解釋錯誤） | 語法錯的時候，用一句話告訴學生錯在第幾行 |
-    | `give_feedback`（寫回饋） | 寫出「優點＋改進」兩段回饋，這一步才用到 AI |
-    | `check_format`（檢查格式） | 檢查回饋標記與字數；只驗格式，不驗內容是否正確 |
+    | `give_feedback`（寫回饋） | 在 1-A 接上模型後，請 AI 寫出「優點＋改進」回饋；是否符合格式由下一站檢查 |
+    | `check_format`（檢查格式） | 檢查兩個標記的順序、內容是否非空與總字數；不驗證回饋內容是否正確 |
     | 工具：`run_code`、`check_indent`、`read_spec`、`check_naming` | 真的執行作業、檢查縮排、讀題目要求、檢查變數名稱 |
     | 手冊：`friendly-feedback`、`strict-review` | 告訴 AI 回饋要溫和鼓勵，還是嚴格審查 |
 
@@ -199,7 +199,10 @@ def ending():
 
         - 💾 **存到雲端硬碟**：把 `/content/review-bot/`（你改過的手冊、程式、State 紀錄）存一份到自己的 Google 雲端硬碟。
         - ⬇️ **下載 zip**：直接下載到電腦。
-        - 📸 **最後一格**：印出這本 notebook 跑過的所有 State，截圖就能交作業。
+        - 📸 **最後一格**：印出實驗格存下的結果。挑選相關紀錄截圖，再依作業要求補上觀察與理由。
+
+        這些是實驗格透過 `記下()` 保存的結果，並非每次執行的所有中間狀態。
+        同一執行環境的紀錄會累積，可能包含其他 notebook 的實驗；請按輸出標題辨認。
 
         瀏覽器暫時斷線不一定會清掉檔案；執行階段被刪除或回收時，`/content/` 的檔案才會失去。
         想保留手冊、程式和 checkpoint，請先備份。notebook 本身則用上方選單「檔案 → 在雲端硬碟中儲存副本」，兩種存檔用途不同。
@@ -216,7 +219,7 @@ def ending():
         下載壓縮檔()
         """),
         code("""
-        #@title 📸 印出整份 State 歷程（截圖交作業）
+        #@title 📸 印出已記錄的實驗結果（選取相關紀錄交作業）
         {PREAMBLE}
         印出歷程()
         """),

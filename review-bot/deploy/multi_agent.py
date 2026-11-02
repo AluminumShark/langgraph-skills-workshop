@@ -4,7 +4,7 @@ START → 抓作業 ─Send×N→ 批一份 → 寄信前確認 → 寄信 → E
          (MCP)             │                  (interrupt)  (MCP)
                            └ 程式檢查語法 → 批改子 agent（手冊＋腳本＋run_code）→ 驗證 agent
 
-對照分工圖的五個抽屜：
+對照分工圖中可以組合的五種角色：
 - 程式：外層流程的順序、語法檢查、「驗證不過就重寫一次」
 - Tool：check_naming（手冊附的腳本）、run_code
 - MCP ：作業倉庫的 list_homework / get_homework / send_email（工具住在另一個程式裡）
@@ -99,8 +99,9 @@ def 驗證(model, code: str, feedback: str) -> dict:
         判斷 = json.loads(m.group(0)) if m else {}
     except json.JSONDecodeError:
         判斷 = {}
-    稽核通過 = bool(判斷.get("通過", "不通過" not in 回答))
-    if not 稽核通過:
+    if not isinstance(判斷, dict) or not isinstance(判斷.get("通過"), bool):
+        問題.append("稽核結果無法解析成布林通過值，請人工檢查")
+    elif not 判斷["通過"]:
         問題.append("稽核員：" + str(判斷.get("原因", 回答.strip()[:60])))
     return {"通過": not 問題, "原因": "；".join(問題) or "OK"}
 
@@ -146,7 +147,8 @@ def 建立多agent小助教(model, mcp設定: dict | None = None, checkpointer=N
         用到的工具, 重寫次數 = [], 0
         while True:
             result = 批改員.invoke({"messages": messages}, config={"recursion_limit": 25})
-            用到的工具 += [c["name"] for m in result["messages"] for c in (getattr(m, "tool_calls", None) or [])]
+            # result 含前一輪完整紀錄；只取本輪新增訊息，避免重複計入舊工具要求。
+            用到的工具 += [c["name"] for m in result["messages"][len(messages):] for c in (getattr(m, "tool_calls", None) or [])]
             feedback = result["messages"][-1].text.strip()
             結論 = 驗證(model, code, feedback)
             if 結論["通過"] or 重寫次數 >= 1:      # 驗證不過最多退回重寫一次

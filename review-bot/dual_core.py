@@ -1,4 +1,4 @@
-"""2-D：雙核作業小助教。外面是 1-A 的 workflow（分支與順序由程式控制），裡面是 1-B 的 agent（放手判斷）。
+"""2-D：整合版作業小助教。外面是 1-A 的 workflow（分支與順序由程式控制），裡面是 1-B 的 agent（由 AI 判斷）。
 
 START → check_syntax ─語法 OK→ skill_loader → give_feedback → check_format ─OK→ END
                      └語法錯→ explain_error → END            └不合格且未達上限→ 退回 give_feedback
@@ -28,7 +28,7 @@ from tools.run_code import run_code
 可選的手冊 = ["friendly-feedback", "strict-review"]
 
 
-class 雙核State(TypedDict, total=False):
+class 整合State(TypedDict, total=False):
     code: str                 # 學生交的作業
     request: str              # 批改需求（skill_loader 用它挑手冊）
     syntax_ok: bool | None
@@ -43,7 +43,7 @@ class 雙核State(TypedDict, total=False):
 
 
 def 建立_skill_loader(model):
-    def skill_loader(state: 雙核State) -> dict:
+    def skill_loader(state: 整合State) -> dict:
         card = 挑手冊(model, state.get("request", ""), 列出名片(可選的手冊))
         return {"skill_name": card["name"], "skill": 讀內文(card)}
 
@@ -51,7 +51,7 @@ def 建立_skill_loader(model):
 
 
 def 建立_give_feedback(model, 回饋字數上限: int):
-    def give_feedback(state: 雙核State) -> dict:
+    def give_feedback(state: 整合State) -> dict:
         system_prompt = (
             f"{state['skill']}\n\n"
             "# 你的工具\n"
@@ -98,9 +98,9 @@ def 開存檔(path: Path = 存檔位置) -> SqliteSaver:
     return SqliteSaver(sqlite3.connect(str(path), check_same_thread=False))
 
 
-def 建立雙核小助教(model, checkpointer=None, 最多重試次數: int = 3, 回饋字數上限: int = 250,
+def 建立整合小助教(model, checkpointer=None, 最多重試次數: int = 3, 回饋字數上限: int = 250,
                 interrupt_before: list[str] | None = None):
-    builder = StateGraph(雙核State)
+    builder = StateGraph(整合State)
     builder.add_node("check_syntax", check_syntax)
     builder.add_node("explain_error", explain_error)
     builder.add_node("skill_loader", 建立_skill_loader(model))
@@ -117,3 +117,8 @@ def 建立雙核小助教(model, checkpointer=None, 最多重試次數: int = 3,
     builder.add_edge("give_feedback", "check_format")
     builder.add_conditional_edges("check_format", 建立_route_after_format(最多重試次數), ["give_feedback", END])
     return builder.compile(checkpointer=checkpointer, interrupt_before=interrupt_before)
+
+
+# 舊版 Python 呼叫的相容別名；新教材使用「整合」名稱。
+雙核State = 整合State
+建立雙核小助教 = 建立整合小助教

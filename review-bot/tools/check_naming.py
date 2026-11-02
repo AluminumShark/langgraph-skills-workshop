@@ -1,7 +1,8 @@
 """check_naming：把 Skill 的腳本 scripts/check_naming.py 包成 agent 的工具。
 
 腳本外面包一層 @tool，就進了 agent 的工具箱：
-AI 只負責「決定要不要跑」和「把結果抄進回饋」，檢查本身是 Python，每次都一樣。
+本例由 AI 決定是否呼叫工具並整理結果；Python 腳本在相同版本與輸入下回傳相同檢查結果，
+但仍要確認模型是否實際呼叫、是否完整保留結果。
 """
 
 import subprocess

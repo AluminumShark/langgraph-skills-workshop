@@ -52,7 +52,10 @@ def health() -> dict:
 async def 開始批改(req: 批改請求) -> dict:
     """從作業倉庫抓作業、平行批改、驗證，然後停在寄信前面等人確認。"""
     config = {"configurable": {"thread_id": req.thread_id}, "max_concurrency": req.同時批幾份}
-    結果 = await (await 小助教()).ainvoke({"結果們": []}, config)
+    圖 = await 小助教()
+    if (await 圖.aget_state(config)).values:
+        return {"thread_id": req.thread_id, "錯誤": "此編號已有存檔；請查進度或用新編號開始，不會重新批改或追加結果。"}
+    結果 = await 圖.ainvoke({"結果們": []}, config)
     待確認 = 結果["__interrupt__"][0].value if "__interrupt__" in 結果 else None
     return {"thread_id": req.thread_id, "待確認": 待確認}
 
@@ -62,8 +65,10 @@ async def 確認寄信(thread_id: str, req: 決定請求) -> dict:
     """人看過之後的決定：帶著同一個 thread_id 接著跑。"""
     config = {"configurable": {"thread_id": thread_id}}
     圖 = await 小助教()
-    if not (await 圖.aget_state(config)).next:
-        return {"thread_id": thread_id, "錯誤": "這個 thread_id 沒有在等確認的信"}
+    if req.決定 not in multi_agent.寄信選項:
+        return {"thread_id": thread_id, "錯誤": "請選擇有效的寄信決定"}
+    if (await 圖.aget_state(config)).next != ("寄信前確認",):
+        return {"thread_id": thread_id, "錯誤": "這個 thread_id 沒有在等確認的信；請先查進度"}
     結果 = await 圖.ainvoke(Command(resume=req.決定), config)
     return {"thread_id": thread_id, "寄件紀錄": 結果.get("寄件紀錄", [])}
 

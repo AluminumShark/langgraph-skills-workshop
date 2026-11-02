@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SECTIONS = re.compile(r'<section\b[^>]*class="[^"]*\bslide\b[^"]*"[^>]*>.*?</section>', re.S)
-COLORS = {"sec1": "var(--blue)", "sec2": "var(--green)", "sec3": "var(--orange)"}
+COLORS = {"sec1": "var(--blue)", "sec2": "var(--green)", "sec3": "var(--orange)", "sec4": "var(--neutral)"}
 
 
 def attr(section: str, name: str, default: str = "") -> str:
@@ -25,7 +25,7 @@ def chapter(section: str) -> tuple[str, str]:
         return "補充", "var(--ink2)"
     classes = attr(section, "class").split()
     kind = next((c for c in classes if c in COLORS), "")
-    label = attr(section, "data-track") or {"sec1": "觀念與實驗", "sec2": "流程與實作", "sec3": "設計與收束"}.get(kind, "開場")
+    label = attr(section, "data-track") or {"sec1": "觀念與實驗", "sec2": "流程與實作", "sec3": "整合與實作", "sec4": "系統設計"}.get(kind, "開場")
     return label, COLORS.get(kind, "var(--ink2)")
 
 

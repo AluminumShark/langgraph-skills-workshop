@@ -30,7 +30,7 @@ def cells():
 
         | 角色 | 白話說是什麼 | 這本裡的例子 |
         | --- | --- | --- |
-        | 程式（流程） | 用程式寫死的順序和檢查 | 一定先檢查語法；寄信前一定停下來等人確認 |
+        | 程式（流程） | 由流程控制的順序和檢查 | 一定先檢查語法；寄信前一定停下來等人確認 |
         | 工具（tool） | AI 可以呼叫的 Python 函式 | `check_naming`（檢查命名）、`run_code`（執行作業） |
         | MCP | 把「住在別的程式或服務裡的工具」接進來的標準插座 | 作業倉庫：抓作業、寄信 |
         | 手冊（Skill） | 給 AI 看的工作手冊 | `friendly-feedback`（溫和鼓勵） |
@@ -41,7 +41,7 @@ def cells():
         | 練習 | 你會做什麼 | 對應投影片 |
         | --- | --- | --- |
         | 練習 1 | 開一個**真的 MCP server**「作業倉庫」：先用本機插座接，再把它變成一個網址（遠端 MCP） | 49、53 |
-        | 練習 2 | ⭐ **先批一份，再整批執行**：MCP 抓作業 → 程式檢查語法 → Send 開 N 個批改子 agent → 驗證 agent → 寄信前停下來等人確認 → MCP 寄信 | 34–36、49、54–55 |
+        | 練習 2 | ⭐ **先批一份，再整批執行**：MCP 抓作業 → Send 分派各份 → 每份先查語法，通過才進批改與驗證 agent → 寄信前停下來等人確認 → MCP 寄信 | 34–36、49、54–55 |
         | 練習 3 | 把它包成 **API 服務**：用網址開始批改、用網址確認寄信，thread_id 跨請求保留 | 50–52 |
         | 練習 4 | **上線前檢查**，並產生部署檔（`Dockerfile`、`langgraph.json`） | 50–51、56 |
 
@@ -54,7 +54,7 @@ def cells():
         | --- | --- | --- | --- |
         | 外層流程、批改子 agent、驗證 agent、本地 tool（`check_naming`、`run_code`） | Colab 裡的 Python | **你的容器**（Cloud Run 或 LangSmith Deployment），外面包一層 API | 2、3 |
         | `skills/`、`scripts/` | `/content/review-bot/` | **跟著容器一起出貨**：改手冊 ＝ 發新版本 | 4 |
-        | 作業倉庫、寄信（MCP） | 同一台機器上的另一個程式 | **別人的服務**：遠端 MCP 是一個網址，用 OAuth 登入 | 1 |
+        | 作業倉庫、寄信（MCP） | 同一台機器上的另一個程式 | **別人的服務**：遠端 MCP 透過網址連線，依服務設定授權 | 1 |
         | 每個 thread_id 的 State、等人確認的信 | SQLite 檔 | **資料庫**（Postgres），機器換掉也還在 | 2、3 |
         | 模型 API key | Colab 🔑 密鑰（或不需要） | **保管箱**（Secret Manager），變成環境變數 | 4 |
         | 同時批幾份、Trace／Eval | `max_concurrency`、印出來的用量 | **任務佇列**、**監控儀表板** | 2、4 |
@@ -68,9 +68,10 @@ def cells():
         ## 怎麼用
 
         1. 先執行 **「0. 環境設定」**（會多裝 MCP、FastAPI；並準備好前面幾本的工具和手冊）。
-        2. 建議先做練習 1 的 stdio，再做練習 2 的一份作業與人工確認；成功後才選整批。HTTP、API、部署檔留第二輪。
+        2. 建議先做練習 1 的 stdio，再做練習 2 的一份作業與人工確認；能說明結果與確認步驟後才選整批。HTTP、API、部署檔留第二輪。
         3. 模型呼叫數隨份數、工具使用與退回重寫改變；先用一份觀察用量。環境設定使用全新預設手冊，不會延續前面 notebook 的修改。
-        4. 這本用到 `await`：Colab 的格子可以直接寫 `await`，不用管它，照樣按 ▶ 就好。
+        4. 重跑環境設定與 `%%writefile` 準備格會覆寫其中的預設檔案，請先保留修改；SQLite 存檔與假的寄件匣不會因此清空。環境重建後要重新準備檔案與服務。
+        5. 這本用到 `await`：Colab 的格子可以直接寫 `await`，不用管它，照樣按 ▶ 就好。
         """),
         setup(NAME, support=SUPPORT, packages=["fastapi>=0.115", "uvicorn>=0.30", *MCP_PACKAGES]),
         md("""
@@ -117,7 +118,7 @@ def cells():
         記下("2-E 練習 1：stdio 接上作業倉庫", {"工具": list(工具們), "學生": [a["學生"] for a in 名單], "說明書token": 說明書})
         """),
         code("""
-        #@title ▶ 執行：同一個 server 換成一個網址（Streamable HTTP，像遠端 MCP）
+        #@title ▶ 選做：同一個 server 換成一個網址（Streamable HTTP，像遠端 MCP）
         {PREAMBLE}
         import asyncio, socket, subprocess
         from deploy import multi_agent
@@ -151,8 +152,8 @@ def cells():
         md("""
         ### 👀 你看到了什麼
 
-        - MCP 工具一樣有名字、說明、參數，**對 agent 來說和自己寫的 `@tool` 用法完全一樣**；差別只在它住在另一個程式裡。
-          （MCP 工具只能用 `await` 呼叫，因為它要透過插座和另一個程式溝通。）
+        - MCP 工具一樣有名字、說明、參數，**接成工具後，模型同樣依名字、說明與參數提出呼叫要求**；執行時還涉及另一個程式的連線與錯誤處理。
+          （這份 Python adapter 範例使用 `await ...ainvoke()` 等待工具回傳；這不是所有 MCP 客戶端的固定寫法。）
         - 換成網址接，工具一模一樣。上雲端時，作業倉庫就是別人服務上的一個網址：你的程式不用知道它怎麼寫、用什麼語言寫。
         - MCP 提供工具清單；由應用程式決定把哪些工具提供給模型。Skill 可以描述使用方式，但不會自動縮減工具定義或撤銷權限。這份流程由程式直接呼叫 MCP，批改 agent 只拿到命名檢查與執行工具。
         - **完成檢查**：先在 stdio 輸出找到工具名稱與小美的作業。能說明「另一個程式提供工具」後，再選做網址接法；不必先懂網路部署。
@@ -170,11 +171,11 @@ def cells():
         | 從作業倉庫抓作業 | MCP（由**程式**呼叫，不需要判斷） | `抓作業` 節點呼叫 `list_homework`、`get_homework` |
         | 一定先檢查語法 | 程式 | 語法錯就直接回，**不叫 AI** |
         | 每份作業一個批改員 | 子 agent ＋ Skill ＋ 腳本 | `Send` 一份開一個；手冊 `friendly-feedback`，工具 `check_naming`、`run_code` |
-        | 檢查回饋有沒有亂講 | 驗證 agent（獨立檢查職責）＋ 程式 | 程式先查行號，稽核員再看內容；不通過就退回重寫一次 |
+        | 檢查回饋有沒有亂講 | 驗證 agent（獨立檢查職責）＋ 程式 | 程式先查行號，稽核員再看內容；不通過最多退回重寫一次；仍不通過會保留失敗狀態 |
         | 寄信 | MCP ＋ 人工確認 | `interrupt()` 停下來，人決定後才呼叫 `send_email` |
 
         表裡的兩個新寫法：
-        - `Send`：LangGraph 的寫法，意思是「照這份清單，一份開一個批改員」，它們可以同時跑。
+        - `Send`：把清單中的每份資料送進「批一份」節點，可以同時處理。節點先查語法，通過才建立批改 agent。
         - `interrupt()`：流程跑到這裡先停住、把 State 存起來，等人回覆之後再接著跑。
 
         注意「不要三人接力」：一份作業從批改到修正都是**同一個批改員**；語意判斷交給另一個只負責檢查的 agent；獨立檢查仍可能漏錯。
@@ -217,14 +218,16 @@ def cells():
         秒數 = time.time() - t0
         for r in 結果["結果們"]:
             驗證 = "✅ 通過" if r["驗證"]["通過"] else "❌ " + r["驗證"]["原因"]
-            print(f"【{r['學生']}】工具：{'、'.join(r['用到的工具']) or '（沒有叫 AI）'}｜驗證：{驗證}｜退回重寫 {r['重寫次數']} 次")
-            print("    " + r["feedback"][:90].replace("\\n", " ") + "…")
+            print(f"【{r['學生']}】工具：{'、'.join(r['用到的工具']) or '（沒有要求工具；不等於沒叫 AI）'}｜驗證：{驗證}｜退回重寫 {r['重寫次數']} 次")
+            print("回饋全文：\\n" + r["feedback"])
+            print("驗證原因：", r["驗證"]["原因"])
         print(f"\\n⏱️ {秒數:.0f} 秒（同時最多 {同時批幾份} 份）；模型呼叫 {用量.次數} 次，約 {用量.input_tokens + 用量.output_tokens:,} token（估算）")
 
         if "__interrupt__" in 結果:
             print("\\n⏸️  停在寄信前面，等人確認。準備寄出的信：")
             for 信 in 結果["__interrupt__"][0].value["要寄出的信"]:
                 print(f"    → {信['學生']} <{信['email']}>（驗證{'通過' if 信['驗證通過'] else '沒過'}）")
+                print(信["回饋"])
         print("存檔裡的下一站：", (await 小助教.aget_state(config)).next)
         await 存檔.conn.close()
         記下(f"2-E 練習 2：整張分工圖（thread_id={thread_id}）",
@@ -242,7 +245,7 @@ def cells():
         存檔 = await multi_agent.開存檔()
         小助教 = multi_agent.建立多agent小助教(model, checkpointer=存檔)
         config = {{"configurable": {{"thread_id": thread_id}}}}
-        if not (await 小助教.aget_state(config)).next:
+        if (await 小助教.aget_state(config)).next != ("寄信前確認",):
             print(f"thread_id「{{thread_id}}」沒有在等確認的信：先執行第 1 步，或檢查 thread_id 有沒有打錯。")
         else:
             結果 = await 小助教.ainvoke(Command(resume=決定), config)   # resume 的值就是 interrupt() 的回傳值
@@ -261,7 +264,7 @@ def cells():
         - **第一輪完成檢查**：應看到小美的一份回饋、驗證結果、待確認的信與下一站。第 1 步只準備信；第 2 步用相同 thread_id 決定後，才寫入假的寄件匣。
         - 第二輪：把範圍改成「整批五份」、兩步都換成新編號「期中-第二批」、同時批幾份設為 1。小明語法錯由程式直接回覆；其餘四份各自進入批改與驗證，退回重寫時會再驗證。
         - 第三輪選做：再換新編號，保持整批五份、同時批幾份改成 3，記錄秒數、模型呼叫數與 token，和第二輪比較。**並行不保證更快，也不保證 token 相同**；模型回答、重寫次數、限流和系統負載都會影響結果。
-        - 每個批改員自行選工具；驗證 agent 的價值是獨立檢查職責與輸入，不只是換個人設。驗證通過仍不代表內容絕對正確。
+        - 每個批改員自行選工具；驗證 agent 的價值是獨立檢查職責與輸入，不只是換個人設。驗證通過仍不代表內容絕對正確；重寫後未通過的回饋仍會列出，預設「只寄驗證通過的」會排除它們。小明的語法回覆由程式直接產生，沒有交給驗證 agent，輸出會註明原因。
         - 想從頭再做請用新 thread_id；已用過的編號不會清空。先能說明「待確認 → 人決定 → 寄件紀錄」，再進入 API 練習。
         """),
         md("""
@@ -308,15 +311,16 @@ def cells():
                     break
             except requests.ConnectionError:
                 time.sleep(0.2)
+        else:
+            raise SystemExit("⚠️ API 未通過健康檢查，請查看上方錯誤並重新啟動服務。")
         (BASE / "deploy" / ".port").write_text(str(port))
         print(f"✅ 小助教 API 開好了：http://127.0.0.1:{port}")
         for 網址 in ["GET  /health", "POST /batch", "POST /batch/{thread_id}/decision", "GET  /threads/{thread_id}"]:
             print("   ", 網址)
         """),
         code(f"""
-        #@title ▶ 執行：用 HTTP 開始一批、確認寄信、查進度
+        #@title ▶ API 第 1 步：開始一批、閱讀待寄內容與進度
         thread_id = "API-第一批"  #@param {{type:"string"}}
-        決定 = "只寄驗證通過的"  #@param {寄信選項}
         {{PREAMBLE}}
         import json, requests
 
@@ -329,25 +333,46 @@ def cells():
         except requests.ConnectionError:
             raise SystemExit("⚠️ 服務沒有在跑（可能重新啟動過執行階段）：先執行上一格")
 
+        if 開始.get("錯誤"):
+            raise SystemExit(開始["錯誤"] + " 若要確認既有信件，請到下一格使用相同編號。")
         待寄 = (開始.get("待確認") or {{}}).get("要寄出的信", [])
         print(f"POST /batch → 停在寄信前面，待確認 {{len(待寄)}} 封：")
         for 信 in 待寄:
             print(f"    {{信['學生']}} <{{信['email']}}> 驗證{{'通過' if 信['驗證通過'] else '沒過'}}")
+            print(信["回饋"])
         print(f"\\nGET /threads/{{thread_id}} →", json.dumps(requests.get(f"{{網址}}/threads/{{thread_id}}", timeout=30).json(), ensure_ascii=False))
 
+        print("請先閱讀待寄內容，再到下一格選擇寄信決定；本格尚未寄信。")
+        記下(f"2-E 練習 3：API 開始（thread_id={{thread_id}}）", 開始)
+        """),
+        md("""
+        **停一下**：上一格只是開始批改與列出待寄內容。讀完後，再在下一格填入同一個 thread_id 並選擇決定。
+        本範例仍只寫假的寄件匣；分成兩格是為了保留人實際閱讀與決定的時間。
+        """),
+        code(f"""
+        #@title ▶ API 第 2 步：人讀完後，確認寄信並查進度
+        thread_id = "API-第一批"  #@param {{type:"string"}}
+        決定 = "只寄驗證通過的"  #@param {寄信選項}
+        {{PREAMBLE}}
+        import json, requests
+
+        port檔 = BASE / "deploy" / ".port"
+        if not port檔.exists():
+            raise SystemExit("請先啟動 API 服務並完成 API 第 1 步。")
+        網址 = f"http://127.0.0.1:{{port檔.read_text()}}"
         確認 = requests.post(f"{{網址}}/batch/{{thread_id}}/decision", json={{"決定": 決定}}, timeout=300).json()
         print(f"\\nPOST /batch/{{thread_id}}/decision（{{決定}}）→")
         for 紀錄 in 確認.get("寄件紀錄") or [確認.get("錯誤")]:
             print("    📮", 紀錄)
         print(f"\\nGET /threads/{{thread_id}} →", json.dumps(requests.get(f"{{網址}}/threads/{{thread_id}}", timeout=30).json(), ensure_ascii=False))
         print("GET /threads/還沒開始的那批 →", json.dumps(requests.get(f"{{網址}}/threads/還沒開始的那批", timeout=30).json(), ensure_ascii=False))
-        記下(f"2-E 練習 3：API 服務（thread_id={{thread_id}}）", {{"開始": 開始, "確認": 確認}})
+        記下(f"2-E 練習 3：API 服務（thread_id={{thread_id}}）", {{"確認": 確認}})
         """),
         md("""
         ### 👀 你看到了什麼
 
-        - 兩個請求之間靠 **thread_id** 接起來：第一個請求跑到 `interrupt()` 就把 State 存進存檔、回應「待確認」；
-          第二個請求帶同一個 thread_id，從存檔接著寄。還沒開始的那批查不到任何存檔。
+        - 兩個請求之間靠 **thread_id** 接起來：第一個請求跑到 `interrupt()` 就把 State 存進存檔、回應「待確認」，此時尚未寄信；
+          第二個請求帶同一個 thread_id，依決定寄或不寄。還沒開始的那批查不到任何存檔；已用過的編號不能再次開始批改，以免把結果混在一起。
         - 雲端機器隨時會被換掉，所以上線時存檔要放在資料庫（Postgres），不能放在這台機器的 SQLite 檔。
         - 真的上線時，`POST /batch` 跑 200 份會很久，通常改成「丟進任務佇列、馬上回應」，LangSmith Deployment 這類平台內建這件事。
         - 投影片 52 的三種上雲端做法，真正在跑的都是這一層。
@@ -365,7 +390,7 @@ def cells():
         | --- | --- |
         | `langgraph.json` | 出貨單：告訴 LangSmith Deployment / `langgraph dev`「graph 在哪個檔案的哪個變數」 |
         | `deploy/app_graph.py` | 出貨單指向的進入點：模型金鑰、遠端 MCP 網址都從環境變數讀 |
-        | `requirements.txt` | 要裝哪些套件（版本範圍釘死；`mcp` 和 `langchain-mcp-adapters` 一定要一起釘） |
+        | `requirements.txt` | 要裝哪些套件（限制相容版本範圍；`mcp` 和 `langchain-mcp-adapters` 一定要一起釘） |
         | `Dockerfile` | 把程式、`skills/`、`scripts/` 裝進同一個容器的食譜 |
         | `.dockerignore` | 不准裝進容器的東西：`.env`、存檔、紀錄 |
         | `deploy/preflight.py` | 上線前檢查：每一項都用程式檢查，不靠感覺 |
@@ -390,10 +415,10 @@ def cells():
         md("""
         ### 👀 你看到了什麼
 
-        - ✅ 的是程式已經幫你守住的：沒有寫死的金鑰、簡易掃描未發現所列可疑詞、`run_code` 有課堂範例的執行限制、agent 有 `recursion_limit`、
+        - ✅ 只代表通過這份範例的檢查，例如未命中列出的金鑰樣式、簡易掃描未發現所列可疑詞、`run_code` 有課堂範例的執行限制、agent 有 `recursion_limit`、
           寄信前有 `interrupt`、有獨立的驗證 agent、部署檔都在。
         - ⚠️ 的是上雲端前還要處理的：
-          - **金鑰**：雲端一定要用正式的 API key，放進 Secret Manager（Colab 左邊 🔑「密鑰」就是它的縮小版）。
+          - **金鑰**：這個 Gemini 部署範例需要有效的 API key，放進 Secret Manager（Colab 左邊 🔑「密鑰」就是它的縮小版）。
           - **checkpointer**：SQLite 只存在這一台機器，上線要換成 PostgresSaver。
           - **MCP**：現在是同一台機器用 stdio 開 server；跨機器使用時可改成遠端 MCP 的網址（`HOMEWORK_MCP_URL`），依服務設定授權；OAuth 是其中一種方式。
         - 想再試一次 2-C：把 `detailed-feedback` 那本有問題的手冊放進 `skills/`，再跑一次檢查，看「第三方 Skill 掃描」會不會變成 ❌。
@@ -412,7 +437,7 @@ def cells():
         # 2b. 代管：把這個資料夾推上 GitHub，在 LangSmith Deployment 選這個 repo 部署（它會讀 langgraph.json）
         ```
 
-        正式部署還需補上執行環境的管理：**每一步看得見（trace、eval、成本），每一個權限關得住（最小權限、沙箱、審 Skill、金鑰、人工確認）。**
+        正式部署還需補上執行環境的管理：**每一步看得見（trace、eval、成本），權限受到適當限制（最小權限、沙箱、審 Skill、金鑰、人工確認）。**
         """),
         *ending(),
     ]
