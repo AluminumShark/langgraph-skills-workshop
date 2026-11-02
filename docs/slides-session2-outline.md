@@ -268,7 +268,7 @@ def check_naming(state):
   - 旁邊還有：任務佇列（200 份排隊）、Trace／Eval 儀表板
 - **重點**：程式、手冊、腳本跟著容器走；會變的資料進資料庫；鑰匙進保管箱；別人的能力透過網路接進來
 - **講者**（約 2 分鐘，時間不夠可以跳過）：細節在課後自學的「補充：上雲端」（HTML 第 47–54 張）
-- **互動／課後練習**：notebook 2-E 練習 1（把小助教包成 API 服務）、練習 4（產生 Dockerfile 與 `langgraph.json`）
+- **互動／課後練習**：notebook 2-E 練習 1–2 在 Colab 把這張圖真的跑一次（真的 MCP server、批改子 agent、驗證 agent），練習 3–4 包成 API 服務、產生部署檔
 
 ### 投影片 32｜你剛才問的問題，整理起來就是這六個
 
@@ -343,7 +343,7 @@ def check_naming(state):
 ### 投影片 35｜補充：上雲端（站名頁，HTML 第 47 張）
 
 - **畫面**：站名「上雲端：把多 agent 的作業小助教，從 Colab 搬到雲端」；這一站要回答：離開 Colab 要換掉哪三樣東西？程式、手冊、腳本怎麼打包、放到哪一朵雲？200 個子 agent、寄信、資安，上線後怎麼管？
-- **互動／課後練習**：notebook 2-E（四個練習的總覽）
+- **互動／課後練習**：notebook 2-E（四個練習的總覽）：練習 1 在 Colab 開一個真的 MCP server「作業倉庫」（先 stdio 本機插座，再 Streamable HTTP 網址）；練習 2 把整張分工圖跑一次（MCP 抓作業 → 程式檢查語法 → `Send` 開批改子 agent → 驗證 agent → `interrupt()` 等人確認 → MCP 寄信）；練習 3 包成 API 服務；練習 4 上線前檢查＋部署檔
 
 ### 投影片 36｜離開 Colab：三樣東西要換掉（HTML 第 48 張）
 
@@ -358,7 +358,7 @@ def check_naming(state):
 
 - **畫面**：左邊專案樹（`dual_core.py`、`deploy/app_graph.py`、`tools/`、`skills/`、`requirements.txt`、`.env`、`langgraph.json`）；右邊 `langgraph.json`（`dependencies: ["."]`、`graphs: {"review_bot": "./deploy/app_graph.py:graph"}`、`env`）與兩個指令 `langgraph dev`、`langgraph build -t review-bot` \[12\]
 - **講者**：`"."` 代表整個資料夾一起出貨，`skills/` 也會跟著進去，手冊和程式永遠同一個版本。先在本機用 `langgraph dev` 跑通，再決定搬去哪
-- **互動／課後練習**：notebook 2-E 練習 1（在 Colab 把雙核小助教包成 API 服務）、練習 4（產生 Dockerfile 與 `langgraph.json`）
+- **互動／課後練習**：notebook 2-E 練習 3（在 Colab 把小助教包成 API 服務）、練習 4（產生 Dockerfile 與 `langgraph.json`）
 
 ### 投影片 38｜放到哪一朵雲：三種做法（HTML 第 50 張）
 
@@ -369,7 +369,7 @@ def check_naming(state):
 | 雲端廠商的 agent 執行環境 | Google Agent Runtime（原 Vertex AI Agent Engine）\[16\]、AWS Bedrock AgentCore \[17\] | 綁那家雲的帳號、權限與工具 | 學校或公司本來就在用那朵雲 |
 
 - **講者**：三種都跑同一份 graph，差別只在「你想自己管多少」。名稱是 2026 年 11 月查證的：LangGraph Platform 在 2025 年 10 月改名 LangSmith Deployment（需 Plus 以上方案）；Google 在 2026 年 4 月把 Vertex AI 改名 Gemini Enterprise Agent Platform、Agent Engine 改叫 Agent Runtime（LangGraph 範本仍是 preview）；AWS Bedrock AgentCore 2025 年 10 月 GA
-- **互動／課後練習**：notebook 2-E 練習 1 包出來的 API 服務，就是這三種做法裡真正在跑的那一層
+- **互動／課後練習**：notebook 2-E 練習 3 包出來的 API 服務，就是這三種做法裡真正在跑的那一層
 
 ### 投影片 39｜五個抽屜搬上雲（HTML 第 51 張）
 
@@ -380,20 +380,21 @@ def check_naming(state):
   - Skill：跟程式一起進 git 和映像，改手冊 ＝ 發一個新版本
   - 子 agent：用 `Send` 一次開 200 份，並設並行上限
 - **新名詞**：遠端 MCP ＝ 插座不在你的機器上，而是別人服務上的一個網址；金鑰由 OAuth 換來，不寫進程式
+- **互動／課後練習**：notebook 2-E 練習 1，在 Colab 開一個真的 MCP server，先用本機插座（stdio），再變成一個網址（Streamable HTTP）
 
 ### 投影片 40｜200 份同時批：Send（HTML 第 52 張）
 
 - **畫面**：`分派(state)` 回傳 `[Send("批一份", {"code": c}) for c in state["作業們"]]`、`add_conditional_edges("抓作業", 分派, ["批一份"])`、`config={"max_concurrency": 20}`；結果用 `Annotated[list, operator.add]` 收回來 \[14\]
 - **講者**：每份一張乾淨的桌子（第 36 張的災難不會發生）；要設並行上限，模型 API 每分鐘有上限；先算錢，多 agent 約 3–10 倍 token \[6\]
 - **新名詞**：`Send` ＝ 在流程裡說「這個節點，照這份清單一份開一個」
-- **互動／課後練習**：notebook 2-E 練習 2，用 Send 平行批 5 份作業，數模型呼叫次數、估 token
+- **互動／課後練習**：notebook 2-E 練習 2，把整張分工圖跑一次，用 Send 開 5 個批改子 agent，數模型呼叫次數、估 token
 
 ### 投影片 41｜寄信前一定停下來：interrupt（HTML 第 53 張）
 
 - **畫面**：`寄信(state)` 節點裡 `答案 = interrupt({...})`，確認後 `graph.invoke(Command(resume="寄"), config={"configurable": {"thread_id": "小明-期中"}})`
 - **講者**：`interrupt` 把 State 存進 checkpointer 然後停住，等多久都可以；所以雲端一定要用 Postgres 這種不會忘記的 checkpointer \[15\]。第 39 張「寄之前一定要有人按確認」在這裡從一句話變成一行程式
 - **新名詞**：`interrupt` ＝ 流程走到這裡先停下來，等人回覆再繼續
-- **互動／課後練習**：notebook 2-E 練習 3，在假的 `send_email` 前面放 `interrupt()`，再用 `Command(resume=…)` 接著跑
+- **互動／課後練習**：notebook 2-E 練習 2，寄信前用 `interrupt()` 停下來，人確認後用 `Command(resume=…)` 接著跑，才透過 MCP 的 `send_email` 寄信
 
 ### 投影片 42｜上線之後：看得見、關得住（HTML 第 54 張）
 

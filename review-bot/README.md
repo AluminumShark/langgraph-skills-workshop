@@ -29,11 +29,11 @@
 
 | 檔案 | 是什麼 |
 | --- | --- |
-| `deploy/server.py` | 練習 1：用 FastAPI 把雙核小助教包成 API 服務（`/health`、`POST /review`、`/threads/{thread_id}`） |
-| `deploy/batch.py` | 練習 2：用 `Send` 平行批改（map-reduce），並和「一張桌子批全部」比 token |
-| `deploy/email_flow.py` | 練習 3：寄信前用 `interrupt()` 停下來等人確認，`Command(resume=...)` 接著跑；寄信是假的，只寫進 `寄件匣.txt` |
-| `deploy/preflight.py` | 練習 4：上線前檢查（寫死的金鑰、第三方 Skill 掃描、run_code 圍欄、recursion_limit、checkpointer、interrupt、部署檔） |
-| `deploy/app_graph.py` | `langgraph.json` 指向的進入點：模型來源與金鑰都從環境變數讀 |
+| `deploy/homework_mcp.py` | 練習 1：「作業倉庫」MCP server（`list_homework`、`get_homework`、`send_email`）。工具住在另一個程式裡：stdio 是本機插座，`--http <port>` 變成一個網址（Streamable HTTP，像遠端 MCP）。寄信是假的，只寫進 `寄件匣.txt`。1-B 第 7 段也會用它 |
+| `deploy/multi_agent.py` | 練習 2：整張分工圖跑一次：MCP 抓作業 → 程式檢查語法 → `Send` 開批改子 agent（手冊 ＋ `check_naming` 腳本 ＋ `run_code`）→ 驗證 agent（稽核員 ＋ 程式檢查行號）→ `interrupt()` 等人確認 → MCP 寄信 |
+| `deploy/server.py` | 練習 3：用 FastAPI 把多 agent 小助教包成 API 服務（`GET /health`、`POST /batch`、`POST /batch/{thread_id}/decision`、`GET /threads/{thread_id}`） |
+| `deploy/preflight.py` | 練習 4：上線前檢查（寫死的金鑰、第三方 Skill 掃描、run_code 圍欄、recursion_limit、checkpointer、寄信前的 interrupt、部署檔） |
+| `deploy/app_graph.py` | 練習 4：`langgraph.json` 指向的進入點；模型來源、金鑰和 MCP server 的網址都從環境變數讀 |
 | `langgraph.json` | 出貨單：給 `langgraph dev` / LangSmith Deployment 看的「graph 在哪裡」 |
 | `requirements.txt`、`Dockerfile`、`.dockerignore` | 把程式、`skills/`、`scripts/` 裝進同一個容器；金鑰不進映像，由雲端的 Secret Manager 注入 |
 | `.env.example` | 本機用的環境變數範本（複製成 `.env`，`.env` 不進 git） |
@@ -54,4 +54,4 @@
 - `history.jsonl`：每次執行的 State 紀錄，最後一格「📸 印出整份 State 歷程」讀它
 - `checkpoints.sqlite`：2-D 的存檔（同一個 `thread_id` 可以接著跑）
 - `.llm.json`：記住選了哪個模型來源（不存 API key）
-- `寄件匣.txt`、`deploy/email_checkpoints.sqlite`、`deploy/.port`：2-E 練習時產生
+- `寄件匣.txt`、`deploy/multi_agent.sqlite`、`deploy/.port`、`deploy/.mcp_port`：2-E 練習時產生（1-B 第 7 段也可能寫 `寄件匣.txt`）

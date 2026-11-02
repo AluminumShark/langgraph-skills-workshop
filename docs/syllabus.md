@@ -318,7 +318,7 @@ Anthropic 2026 年 1 月的指引（出處見參考資料）：
 
 ### 補充：多 agent 系統怎麼部署到雲端（課後自學）
 
-第 2 堂簡報第 47–54 張（參考來源在第 55–56 張），課堂上不講，給想把作業小助教真的放上線的同學。內容依序是：離開 Colab 要換掉的三樣東西（模型金鑰改放 Secret Manager、檔案改裝進容器、checkpointer 改用 Postgres）；用 `langgraph.json` 打包、`langgraph dev` 本機跑通；三種上雲做法（LangSmith Deployment、自己的容器如 Cloud Run、Google Agent Runtime 或 AWS Bedrock AgentCore）；五個抽屜搬上雲後各變成什麼（含遠端 MCP）；用 `Send` 平行批 200 份並設並行上限、先算成本；寄信前用 `interrupt()` 人工確認；上線後的 trace、eval 進 CI 與權限清單。對應的課後選做 notebook 是 [`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)，四個練習都在免費 Colab 跑，不需要真的部署。
+第 2 堂簡報第 47–54 張（參考來源在第 55–56 張），課堂上不講，給想把作業小助教真的放上線的同學。內容依序是：離開 Colab 要換掉的三樣東西（模型金鑰改放 Secret Manager、檔案改裝進容器、checkpointer 改用 Postgres）；用 `langgraph.json` 打包、`langgraph dev` 本機跑通；三種上雲做法（LangSmith Deployment、自己的容器如 Cloud Run、Google Agent Runtime 或 AWS Bedrock AgentCore）；五個抽屜搬上雲後各變成什麼（含遠端 MCP）；用 `Send` 平行批 200 份並設並行上限、先算成本；寄信前用 `interrupt()` 人工確認；上線後的 trace、eval 進 CI 與權限清單。對應的課後選做 notebook 是 [`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)，四個練習都在免費 Colab 跑，不需要真的部署：練習 1 在 Colab 開一個真的 MCP server「作業倉庫」（stdio 本機插座、Streamable HTTP 網址）；練習 2 把整張分工圖跑一次（MCP 抓作業 → 程式檢查語法 → `Send` 開批改子 agent → 驗證 agent → `interrupt()` 等人確認 → MCP 寄信，並數模型呼叫次數與 token）；練習 3 把它包成 API 服務；練習 4 上線前檢查並產生部署檔。
 
 **部署地圖（課堂上放在第 2 堂投影片 41，約 2 分鐘，時間不夠可跳過）**：把分工圖搬上雲端，每一格住在不同的地方。
 
@@ -345,7 +345,7 @@ Anthropic 2026 年 1 月的指引（出處見參考資料）：
 | `2-B_code_text_script.ipynb` | 第 2 堂 0:35 | 不用改，執行三個版本並比對 |
 | `2-C_security.ipynb` | 第 2 堂 1:05 | 不用改，找出藏指令的行 |
 | `2-D_dual_core.ipynb` | 第 2 堂 1:25 | thread\_id |
-| `2-E_deploy.ipynb`（課後選做） | 第 2 堂補充：上雲端（投影片 47–54） | 選做四個練習：API 服務、平行批改、寄信前確認、上線前檢查 |
+| `2-E_deploy.ipynb`（課後選做） | 第 2 堂補充：上雲端（投影片 47–54） | 選做四個練習：真的 MCP server、整張分工圖跑一次（子 agent、驗證 agent、寄信前確認）、API 服務、上線前檢查 |
 
 Notebook 執行後在 `/content/review-bot/` 產生的檔案：
 
