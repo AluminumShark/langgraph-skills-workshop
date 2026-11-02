@@ -58,7 +58,7 @@ def 檢查() -> list[tuple[str, str, str]]:
 
     可疑 = _掃(BASE / "skills", 可疑樣式)
     結果.append(("❌" if 可疑 else "✅", "第三方 Skill 掃描（2-C 的三個習慣）",
-               "；".join(可疑) if 可疑 else "skills/ 裡沒有可疑的指令"))
+               "；".join(可疑) if 可疑 else "簡易規則未命中；不代表 skills/ 中所有內容都安全"))
 
     sys.path.insert(0, str(BASE))
     from tools.run_code import 執行作業
@@ -74,11 +74,11 @@ def 檢查() -> list[tuple[str, str, str]]:
     有確認 = "interrupt(" in 內容
     結果.append(("✅" if 有確認 else "❌", "不可逆的動作（寄信）前面有 interrupt", "寄信前會停下來等人確認" if 有確認 else "找不到 interrupt"))
     有驗證 = "稽核員人設" in 內容
-    結果.append(("✅" if 有驗證 else "❌", "有獨立的驗證 agent", "批改和稽核是兩個不同人設，不會自己放過自己" if 有驗證 else "找不到驗證 agent"))
+    結果.append(("✅" if 有驗證 else "❌", "有獨立的驗證 agent", "批改和稽核的職責與輸入分開；獨立稽核仍可能漏錯" if 有驗證 else "找不到驗證 agent"))
 
     網址 = os.environ.get("HOMEWORK_MCP_URL")
     結果.append(("✅" if 網址 else "⚠️", "作業倉庫 MCP 從網址連（遠端 MCP）",
-               f"HOMEWORK_MCP_URL={網址}" if 網址 else "現在是在同一台機器用 stdio 開 MCP server；上雲端要改成遠端 MCP 的網址（加上 OAuth 登入）"))
+               f"HOMEWORK_MCP_URL={網址}" if 網址 else "現在是在同一台機器用 stdio 開 MCP server；跨機器使用時可設定遠端 MCP 網址，依服務配置授權"))
 
     缺 = [f for f in ("langgraph.json", "requirements.txt", "Dockerfile", ".dockerignore") if not (BASE / f).exists()]
     結果.append(("❌" if 缺 else "✅", "部署檔都在", f"缺少：{'、'.join(缺)}" if 缺 else "langgraph.json、requirements.txt、Dockerfile、.dockerignore"))

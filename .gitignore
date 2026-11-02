@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .env
 .venv/
+.tmp/
 .DS_Store
 notebooks/*.executed.ipynb
 

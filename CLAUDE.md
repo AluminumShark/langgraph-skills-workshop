@@ -1,77 +1,55 @@
-# 從 LangGraph 到 Skills：結構化與非結構化 Agent 的雙拼指南
+# 從 LangGraph 到 Skills：教材協作規範
 
-NTU AI Club 技術工作坊，兩堂各 120 分鐘。講者：李維（Levi, @AluminumShark）、柯宥圻。
+NTU AI Club 工作坊，對象是剛學會 Python 的初學者，兩堂各 120 分鐘。
+第 1 堂：2026-11-09；第 2 堂：2026-11-16。
+公開 repo：AluminumShark/langgraph-skills-workshop。
 
-## 這個 repo 的狀態
+## 文件優先順序
 
-- 上課日期：第 1 堂 2026-11-09（一）、第 2 堂 2026-11-16（一）。公開 repo：`AluminumShark/langgraph-skills-workshop`。
-- `slides/session1.html`、`slides/session2.html`：兩堂課的簡報，**已完成**，單一 HTML，只依賴 Google Fonts。← → 換頁、N 看講者備註、F 全螢幕。已填日期與 repo 連結；第 1 堂現在 45 張：投影片 5 是小專案「作業小助教」、19 是「四個工作站」流程圖，MCP 在 35（緊接在「模型只看得到說明書」之後）。第 1 堂投影片 38 已修正 recursion limit（1.1 起預設 10007，notebook 自己設 25）；第 2 堂主線多了「RAG 放哪裡」（投影片 34）和「部署地圖」（投影片 41），「上雲端」補充在投影片 47–54（對應 2-E），參考來源在 55–56。每頁底部的進度列是靜態 markup，增刪投影片時要整份重新產生。
-- `docs/syllabus.md`：完整課綱（時間表、觀念清單、notebook 規格、最低完成標準）。**任何實作都以它為準。**
-- `docs/slides-session{1,2}-outline.md`：投影片逐張大綱，含每張的「互動／停一下」，notebook 的段落要對得上。
-- `docs/reuse-from-old-workshop.md`：從舊教案 `reference/old-workshop/` 抄出來、已改成 review-bot 語境的程式碼，每段標了該放哪本 notebook。
-- `docs/original-proposal.txt`：最初的提案，只供對照。
-- `notebooks/`：**已完成**，七本核心 notebook ＋ 課後選做 `2-E_deploy.ipynb`。1-B 第 7 段接一個真的 MCP server（`review-bot/deploy/homework_mcp.py`，stdio）；2-E 的四個練習是：開 MCP server（stdio 與 Streamable HTTP）、把整張分工圖跑一次（MCP、`Send` 子 agent、驗證 agent、`interrupt`）、包成 API、上線前檢查。MCP 套件要釘 `mcp>=1.20,<2` 和 `langchain-mcp-adapters>=0.3,<0.4`（版本不配會 import 失敗）。**由 `scripts/build_notebooks.py` 產生，不要直接改 `.ipynb`**（重新產生會保留講師在 Colab 存回 GitHub 的輸出和 cell id，輸出格式照 Colab 的 JSON 排版；改之前先 `git pull`；在 Colab 改的文字要同步回 nbspec）：格子定義在 `scripts/nbspec/nb_*.py`，共用的格子（0. 環境設定、收尾三格、每段起點）在 `scripts/nbbuild.py`。每段標有「📍 對應簡報：投影片 N」。
-- `review-bot/`：**已完成**，講師版原始碼；notebook 的 `%%writefile` 內容直接讀這裡，保證一致。`llm.py`（provider 轉接頭：`google.colab.ai` 用 prompt 模擬 tool calling，備案是 Gemini key）與 `workshop.py`（notebook 小工具）是工作坊基礎設施，由「0. 環境設定」寫出。
-- 本機環境用 uv（`pyproject.toml`、`uv.lock`、Python 3.12）；Colab 第一格也用 `uv pip install` 裝套件。`uv run python scripts/verify_notebooks.py` 用 `tests/mock_colab/` 的假 `google.colab` 與假模型把每本跑到尾（只驗流程，不驗真實模型品質）。
+1. docs/syllabus.md：目前課程主線、時間與驗收標準。
+2. docs/slides-session1-outline.md、docs/slides-session2-outline.md：現行頁次與講者停頓點。
+3. scripts/nbspec/：每本 notebook 的實際內容。
+4. docs/reuse-from-old-workshop.md、docs/original-proposal.txt、reference/old-workshop/：歷史參考，不是目前規格。
 
-## 要做的事：七本 Colab notebook
+## 來源與產物
 
-| 檔名 | 對應段落 | 學生會改的地方 |
-| --- | --- | --- |
-| `notebooks/1-0_tool_calling.ipynb` | 第 1 堂 0:10 | 不用改，只看模型回傳的工具呼叫 JSON |
-| `notebooks/1-A_workflow.ipynb` | 第 1 堂 0:28 | 作業程式、最多重試次數、回饋字數上限 |
-| `notebooks/1-B_agent.ipynb` | 第 1 堂 1:02 | 作業程式、system prompt 裡的一句話 |
-| `notebooks/2-A_skills.ipynb` | 第 2 堂 0:08 | 兩份 SKILL.md 的規則與 description |
-| `notebooks/2-B_code_text_script.ipynb` | 第 2 堂 0:28 | 不用改，執行三個版本並比對 |
-| `notebooks/2-C_security.ipynb` | 第 2 堂 0:58 | 不用改，找出藏指令的行 |
-| `notebooks/2-D_dual_core.ipynb` | 第 2 堂 1:06 | thread_id |
+- slides/session1.html、slides/session2.html 是單檔 HTML 簡報。保留原有設計、鍵盤操作與講者備註。每張 section 有穩定 id；重排後執行 scripts/sync_slide_navigation.py 重建每頁的靜態導覽和 aria 頁碼，並同步 notebook／文件引用。
+- notebooks/ 有七本課程 notebook 與課後選做的 2-E。**不要直接修改 ipynb**。
+- 格子定義在 scripts/nbspec/nb_*.py；共用環境、存檔與產生邏輯在 scripts/nbbuild.py。
+- review-bot/ 是講師版原始碼；writefile() 從這裡產生相同程式內容。
+- llm.py 包裝 Colab 或 Gemini provider；workshop.py 提供檔案、紀錄及顯示功能。
+- pyproject.toml 與 uv.lock 管理本機環境。Colab 安裝使用相容版本範圍，不能稱為完全釘死版本。
 
-每本的細節、每段的預測題、三個版本要比什麼，全部在 `docs/syllabus.md` 的「第 1 堂」「第 2 堂」「講師準備的 Colab notebook」三節，以及對應投影片大綱的「互動／停一下」。
+## 教學規範
 
-## 硬性規範（學生是剛學會 Python 的初學者，只執行、不寫程式）
+1. 主線只要求操作表單、改指定手冊、讀輸出；不要求現場寫框架程式。
+2. 長篇基礎設施預設收合；學生要改的 SKILL.md 與作業保持可見。
+3. 實驗前寫前置條件與預測題，後面寫觀察問題。輸出相同／不同、模型拒絕／接受都可以是有效觀察，不要求重跑到指定結果。
+4. 控制實驗一次只改一項。2-A 分開換手冊、改正文、改 description；2-B 三版的命名規則、輸入、基準集合必須相同。
+5. 區分工具原始結果、AI 最終回覆與解析器擷取值；腳本確定性不保證 agent 一定呼叫或完整轉述。
+6. 表單使用「最多生成次數（含第一次）」；graph 的相容 API 欄位「最多重試次數」若保留，必須解釋其實際語意。達到上限要標成未通過，不把停止當成功。
+7. 語法正確、執行成功、符合題目要求是不同判斷；格式檢查不能驗證內容正確。
+8. 每段可否獨立重跑依前置條件而定。不宣稱所有格子都能獨立執行；說明準備格會否覆寫手冊。
+9. 瀏覽器斷線不等於 runtime 已回收。重建 runtime 後要重新準備檔案，備份 notebook 與備份 /content/review-bot/ 是不同操作。
+10. 主線收束後才放 token metadata、手組 agent、eval、RAG、部署、多 agent 完整系統等補充。
+11. Skill、tool、MCP、workflow、agent 不是互斥分類。先決定規則如何表達，再決定誰控制執行時機。
+12. 多份獨立作業先教批次，再談並行與子 agent；角色名字不同不等於驗證更可靠。可程式檢查的規則先用程式，重要外部動作加入人工確認。
 
-1. **LLM 呼叫**：優先用 Colab 內建 `from google.colab import ai`（免費帳號不需 API key）。每本第一格做可切換的 provider：`ai.generate_text` 為預設，講師 API key（Gemini 經 `langchain_google_genai`）為備案；兩者都包成同一個 `model` 物件給後面的 cell 用。1-0 的 tool calling 示範若 `google.colab.ai` 不支援 `bind_tools`，就用備案。
-2. **學生要改的值一律做成表單欄位** `#@param`，不讓學生碰程式碼。
-3. **程式碼格預設收合**（cell metadata `"cellView": "form"` 或在 `#@title` 下），只露出標題和輸出。
-4. **每段前一格 markdown 寫預測題，執行後一格寫「你看到了什麼」**；題目照投影片大綱的「停一下」。
-5. **每段都能從該段第一格獨立重跑**（斷線、跑錯都能回到起點），不依賴上一段的變數。
-6. **SKILL.md 和 scripts 用 `%%writefile /content/review-bot/...` 寫進檔案**，學生改完那一格再執行即可。
-7. **`run_code` 工具必須受限執行**學生作業：禁止 `import os / sys / subprocess / shutil`、設 timeout、捕捉 stdout 與例外，回傳短字串。不可照抄舊教案的 `eval()`。
-8. **2-C 的金鑰一律用假的**（例如 `FAKE_KEY_do_not_use_1234`），藏指令那本 Skill 的壞行要明顯但不要太容易一眼看到。
-9. 套件版本釘死：`langgraph>=1.1,<2`、`langchain>=1.2,<2`、`langchain-google-genai>=4,<5`。用 `create_agent`（`from langchain.agents import create_agent`），不用已棄用的 `create_react_agent`；1-B 的「展開」用手組 `StateGraph(MessagesState) + ToolNode + tools_condition`（程式在 `docs/reuse-from-old-workshop.md`）。
-10. 1-A 用 `stream_mode="values"` 印每一步的完整 State；1-B 用 `docs/reuse-from-old-workshop.md` 的 `pretty_trace`，輸出改中文。
-11. 變數名用中文語境（`作業`、`小助教`、`ask_model`），不用 pandas 舊名。
-12. 每本最後一格印出整份 State 歷程，方便學生截圖交作業；並提供「掛載 Google Drive 保存」與「下載 zip」兩格。
+## 程式規範
 
-## 範例專案 review-bot 的檔案（notebook 跑完後在 `/content/review-bot/`）
+- 使用 create_agent（langchain.agents）；手組 StateGraph + ToolNode + tools_condition 為補充。
+- 使用中文情境變數與 review-bot 範例，不沿用舊 pandas 情境。
+- run_code 保留模組限制、timeout 與錯誤輸出限制；不可稱為完整安全沙箱，不引入 eval 執行任意學生文字。
+- 2-C 只使用假金鑰資料，工具不得讀任意真實環境變數；遠端 shell 範例只閱讀，不能執行。
+- 2-D 明示本 notebook 使用預設手冊。區分未完成 thread 續跑、完成 thread 取回結果、新 thread 全新執行。列出歷史紀錄不是 Replay。
+- 每本提供存檔、zip 下載與歷程輸出。收尾的歷程只代表已執行的格子，不暗示完成全部實驗。
 
-```
-review-bot/
-├── graph.py                     # 1-A：workflow（check_syntax → give_feedback → check_format，分叉 explain_error，退回最多 3 次）
-├── agent.py                     # 1-B：create_agent 版
-├── tools/
-│   ├── run_code.py              # 受限執行
-│   ├── check_indent.py          # 縮排與行長（故意不碰命名，留給 2-B）
-│   └── read_spec.py
-├── skills/
-│   ├── friendly-feedback/SKILL.md
-│   ├── strict-review/SKILL.md
-│   ├── detailed-feedback/        # 2-C 用：SKILL.md 藏指令 + scripts/setup.sh 有 curl | bash
-│   └── naming-check/
-│       ├── SKILL.md
-│       └── scripts/check_naming.py
-└── dual_core.py                 # 2-D：外層 workflow，give_feedback 節點裡包 agent + skill_loader
-```
+## 修改與驗證
 
-這些檔案的講師版原始碼放在本 repo 的 `review-bot/`，notebook 用 `%%writefile` 寫出同樣內容。
-
-## 驗收
-
-- 每本 notebook 在乾淨的 Colab 免費帳號上能從頭跑到尾（用 `jupyter nbconvert --execute` 在本機先驗一次，需要時 mock `google.colab`）。
-- 學生的最低完成標準（見 `docs/syllabus.md`「講師準備的 Colab notebook」末尾）每一條都有對應的 cell 能做到。
-- 2-B 的三個版本各跑三次，版本 A 結果真的會飄、B 和 C 三次一致。
-- 2-D 用同一個 `thread_id` 中斷再跑，State 保留；換 `thread_id` 從空白開始。
-
-## 工作方式
-
-先讀 `docs/syllabus.md` 全文，再讀對應投影片大綱，再讀 `docs/reuse-from-old-workshop.md`，然後一本一本做，每做完一本就跑一次驗收。不要一次產生七本再驗。
+1. 修改前確認工作樹，必要時先 git pull 取得講師從 Colab 存回的版本；不要覆蓋未提交變更。
+2. 修改 nbspec 與 review-bot，再執行 uv run python scripts/build_notebooks.py；可加 1-A 2-B 等名稱前綴。
+3. 只有來源完全相同的 code cell 才沿用舊輸出，重排不依位置接輸出；修改過的程式清空輸出。沿用輸出不等於驗過新前置狀態。
+4. 執行 uv run python -m unittest discover -s tests，檢查語意與輸出保存的回歸案例。
+5. 執行 uv run python scripts/verify_notebooks.py，把八本 notebook 從頭跑到尾。使用 tests/mock_colab/ 假模型，僅驗程式流程，不代表真實模型品質或正式 Colab 相容性。
+6. 修改投影片後執行 scripts/sync_slide_navigation.py --check，檢查頁次、內文引用與大綱一致。
+7. 課前另用真實 Colab 試跑主要操作，確認帳號可用功能、模型額度與實際授課耗時。

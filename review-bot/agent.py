@@ -28,7 +28,7 @@ def 建立_agent(model, system_prompt: str = 基本_system_prompt, tools=None):
 
 
 def 建立_展開版_agent(model, system_prompt: str = 基本_system_prompt, tools=None):
-    """create_agent 一行底下，其實就是這十幾行。"""
+    """教學用的核心迴圈：展開模型與工具如何互動，不是 create_agent 的完整實作。"""
     tools = tools or 小助教的工具
     model_with_tools = model.bind_tools(tools)
 

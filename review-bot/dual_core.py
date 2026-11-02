@@ -1,7 +1,7 @@
-"""2-D：雙核作業小助教。外面是 1-A 的 workflow（順序鎖死），裡面是 1-B 的 agent（放手判斷）。
+"""2-D：雙核作業小助教。外面是 1-A 的 workflow（分支與順序由程式控制），裡面是 1-B 的 agent（放手判斷）。
 
 START → check_syntax ─語法 OK→ skill_loader → give_feedback → check_format ─OK→ END
-                     └語法錯→ explain_error → END            └不合格→ 退回 give_feedback
+                     └語法錯→ explain_error → END            └不合格且未達上限→ 退回 give_feedback
 
 - skill_loader ：看所有手冊的名片，挑一本，把內文放進 State（2-A 的手冊）
 - give_feedback：裡面是一個小 agent，用挑中的手冊當 system prompt，
@@ -94,7 +94,7 @@ def 逐站執行(小助教, 輸入, config: dict) -> dict:
 
 
 def 開存檔(path: Path = 存檔位置) -> SqliteSaver:
-    """把 State 存進 SQLite 檔：重跑 cell、甚至重新啟動執行階段，存檔都還在。"""
+    """把 State 存進 SQLite 檔；只要同一檔案仍存在，就能按 thread_id 讀回。"""
     return SqliteSaver(sqlite3.connect(str(path), check_same_thread=False))
 
 

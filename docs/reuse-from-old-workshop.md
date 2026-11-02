@@ -1,3 +1,7 @@
+# 歷史素材說明
+
+> 本檔保留舊教案可參考的素材與當時規劃，不代表目前頁碼、段落順序或驗收標準。實作以 [目前課綱](syllabus.md)、兩堂逐頁大綱及 `scripts/nbspec/` 為準。
+
 # REUSE.md：舊教案可直接貼用的素材
 
 來源：`AluminumShark/langgraph-harness-workshop`（clone 在 `scratchpad/oldrepo/`，Gemini 2.5 Flash、langgraph 1.1.10 / langchain 1.2.18 手組 ReAct 迴圈，單堂 90 分鐘「Data Analyst Agent + trace/eval」課）。

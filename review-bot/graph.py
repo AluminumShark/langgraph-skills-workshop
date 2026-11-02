@@ -1,6 +1,6 @@
 """1-A：作業小助教的 workflow，路線由程式決定。
 
-START → check_syntax ─語法 OK→ give_feedback → check_format ─格式 OK→ END
+START → check_syntax ─語法 OK→ give_feedback → check_format ─格式 OK 或達上限→ END
                      └語法錯→ explain_error → END     └不合格、retries 還沒到上限→ 退回 give_feedback
 
 三個零件：
@@ -23,7 +23,7 @@ class State(TypedDict, total=False):
     feedback: str          # 給學生的回饋
     format_ok: bool | None # 回饋格式合不合格
     format_problem: str    # 不合格的原因（退回重寫時會告訴 AI）
-    retries: int           # 回饋寫了幾次
+    retries: int           # 已產生回饋的次數，包含第一次
 
 
 # ---------- Node 1：check_syntax 檢查語法（純 Python）：只看文法對不對，不執行程式 ----------
@@ -80,7 +80,7 @@ def explain_error(state: State) -> dict:
 def give_feedback_固定文字(state: State) -> dict:
     """先不接 AI 的版本：回固定的一段話。"""
     return {
-        "feedback": "優點：語法正確，程式可以執行。\n改進：（這一版還沒接 AI，先用固定文字）",
+        "feedback": "優點：這份作業通過語法檢查。\n改進：（這一版還沒接 AI，尚未檢查執行結果與邏輯）",
         "retries": state.get("retries", 0) + 1,
     }
 
@@ -110,10 +110,10 @@ def 建立_check_format(回饋字數上限: int):
     def check_format(state: State) -> dict:
         feedback = state.get("feedback", "")
         問題 = []
-        if "優點" not in feedback:
-            問題.append("少了「優點」段落")
-        if "改進" not in feedback:
-            問題.append("少了「改進」段落")
+        # 檢查標籤順序與兩段非空內容；接受全形／半形冒號與換行。
+        parts = re.fullmatch(r"\s*優點[：:]\s*(.+?)\s*改進[：:]\s*(.+?)\s*", feedback, re.DOTALL)
+        if not parts or not all(part.strip() for part in parts.groups()):
+            問題.append("需依序寫出「優點：內容」與「改進：內容」兩段")
         if len(feedback) > 回饋字數上限:
             問題.append(f"太長了：{len(feedback)} 字，上限 {回饋字數上限} 字")
         return {"format_ok": not 問題, "format_problem": "；".join(問題)}
@@ -121,14 +121,14 @@ def 建立_check_format(回饋字數上限: int):
     return check_format
 
 
-# ---------- 條件邊 2：格式 OK 或重寫次數到了 → 結束；否則退回重寫 ----------
+# ---------- 條件邊 2：格式 OK 或回饋產生次數到上限 → 結束；否則退回重寫 ----------
 
 def 建立_route_after_format(最多重試次數: int):
     def route_after_format(state: State) -> str:
         if state["format_ok"]:
             return END
         if state.get("retries", 0) >= 最多重試次數:
-            return END  # 重寫次數到了就停，不然會無限轉圈
+            return END  # 已達回饋產生上限；停止不代表格式通過
         return "give_feedback"
 
     return route_after_format
@@ -137,7 +137,7 @@ def 建立_route_after_format(最多重試次數: int):
 # ---------- 把零件接起來 ----------
 
 def 建立小助教(model=None, 最多重試次數: int = 3, 回饋字數上限: int = 150):
-    """model=None 時 give_feedback 用固定文字（先不接 AI）。"""
+    """model=None 時用固定文字。最多重試次數是歷史參數名，實際包含第一次產生。"""
     give_feedback = 建立_give_feedback(model, 回饋字數上限) if model else give_feedback_固定文字
 
     builder = StateGraph(State)

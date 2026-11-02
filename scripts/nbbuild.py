@@ -30,7 +30,7 @@ PACKAGES = [
     "langgraph-checkpoint-sqlite>=3,<4",
 ]
 
-# 每一段 run cell 的開頭：重新連上模型（斷線、跑錯都能從這裡重來）
+# 每一段 run cell 的開頭：重新連上模型；檔案準備及前置結果仍須依該段說明完成。
 PREAMBLE = f'''import sys, importlib; sys.path.insert(0, "{COLAB_RB}"); importlib.invalidate_caches()
 try:
     from workshop import *   # 準備、記下…（「0. 環境設定」寫好的小工具）
@@ -58,7 +58,12 @@ def code(src: str, form: bool = True):
 
 def writefile(rel: str, dest: str | None = None):
     content = (RB / rel).read_text(encoding="utf-8")
-    return new_code_cell(f"%%writefile {COLAB_RB}/{dest or rel}\n{content.rstrip()}\n")
+    cell = new_code_cell(f"%%writefile {COLAB_RB}/{dest or rel}\n{content.rstrip()}\n")
+    # 手冊與學生作業要直接編輯；長篇基礎設施預設收合，避免把實驗入口推離畫面。
+    if not (Path(rel).name.startswith("SKILL") or rel == "我的作業.py"):
+        cell.metadata["cellView"] = "form"
+        cell.metadata["jupyter"] = {"source_hidden": True}
+    return cell
 
 
 def colab_url(name: str) -> str:
@@ -85,7 +90,7 @@ def setup(name: str, support: list[str] = (), extra: str = "", packages: list[st
     files = ["llm.py", "workshop.py", *support]
     embedded = "\n".join(_embed(f) for f in files)
     pkgs = " ".join(f'"{p}"' for p in [*PACKAGES, *packages])
-    src = f'''#@title 0. 環境設定（第一次打開、或斷線後，先執行這一格）
+    src = f'''#@title 0. 環境設定（第一次打開、或執行階段重設後執行）
 #@markdown **模型來源**：`colab` ＝ Colab 內建模型（免費、不用 API key）；`gemini` ＝ 講師提供的 Gemini API key（備案）
 模型來源 = "colab"  #@param ["colab", "gemini"]
 #@markdown 選 `gemini` 時：建議在左邊 🔑「密鑰」新增 `GOOGLE_API_KEY`；也可以把 key 貼在下面（⚠️ 貼了就不要把 notebook 分享出去）
@@ -97,7 +102,7 @@ gemini_模型名稱 = "gemini-flash-latest"  #@param {{type:"string"}}
 import os, shutil, subprocess, sys
 from pathlib import Path
 
-# 1. 用 uv 安裝套件（版本釘死，大約 10–30 秒）
+# 1. 用 uv 安裝套件（限制相容版本範圍；時間依網路而異）
 if not os.environ.get("WORKSHOP_SKIP_INSTALL"):
     print("⏳ 用 uv 安裝 LangGraph / LangChain ...")
     if shutil.which("uv") is None:
@@ -140,8 +145,11 @@ def project_intro(這本: str):
     return md(f"""
     ## 🎯 這兩堂課的小專案：作業小助教
 
-    **作業小助教**是一個幫忙批改 Python 作業的小程式：你交給它一段作業，它回你一份**固定格式的回饋**，
-    一定有兩段：**「優點：」**寫得好的地方、**「改進：」**哪裡可以更好、怎麼改。
+    **作業小助教**是一個協助檢查 Python 作業的小程式。你交給它一段作業，它回覆檢查結果。
+    在 workflow 版本中，語法有錯會先回覆錯誤；語法通過才請 AI 產生含**「優點：」與「改進：」**的回饋。
+    格式檢查若一直不通過，流程會在達到生成次數上限時停止，並標示未通過，不能把「停止」當成「合格」。
+
+    **先分清三件事：**語法正確（Python 看得懂）≠ 執行成功（跑的時候沒出錯）≠ 答案正確（符合題目要求）。
 
     選它當練習，是因為它剛好三種東西都用得到：
 
@@ -151,18 +159,23 @@ def project_intro(這本: str):
     | 需要判斷的事 | 回饋怎麼寫、要不要真的執行程式看看 | 交給 **AI**（agent，第 1 堂） |
     | 做法和規矩 | 回饋的語氣要溫和還是嚴格、好的變數名稱長什麼樣 | 寫成給 AI 看的**手冊**（Skill，第 2 堂） |
 
-    小助教的零件（之後會一個一個出現）：
+    👉 **這本 notebook 做的是：**{這本}
+
+    <details><summary>想查零件名稱時再展開（不用先背）</summary>
 
     | 零件 | 白話說它在做什麼 |
     | --- | --- |
     | `check_syntax`（檢查語法） | 只看程式的「文法」對不對，例如括號有沒有關好、冒號有沒有漏；**不會執行程式** |
     | `explain_error`（解釋錯誤） | 語法錯的時候，用一句話告訴學生錯在第幾行 |
     | `give_feedback`（寫回饋） | 寫出「優點＋改進」兩段回饋，這一步才用到 AI |
-    | `check_format`（檢查格式） | 檢查回饋有沒有兩段、有沒有太長；不合格就退回去重寫 |
+    | `check_format`（檢查格式） | 檢查回饋標記與字數；只驗格式，不驗內容是否正確 |
     | 工具：`run_code`、`check_indent`、`read_spec`、`check_naming` | 真的執行作業、檢查縮排、讀題目要求、檢查變數名稱 |
     | 手冊：`friendly-feedback`、`strict-review` | 告訴 AI 回饋要溫和鼓勵，還是嚴格審查 |
 
-    👉 **這本 notebook 做的是：**{這本}
+    </details>
+
+    **操作提醒：**先執行「0. 環境設定」，再照本段的準備格 → 預測 → 執行 → 對照操作。
+    `%%writefile` 表示「把這格內容存成檔案」；修改後要執行才會生效。重跑準備格可能覆寫手冊，先存好自己的修改。
     """)
 
 
@@ -188,7 +201,9 @@ def ending():
         - ⬇️ **下載 zip**：直接下載到電腦。
         - 📸 **最後一格**：印出這本 notebook 跑過的所有 State，截圖就能交作業。
 
-        Colab 斷線後 `/content/` 裡的檔案會消失，想留下來就先存。notebook 本身請用上方選單「檔案 → 在雲端硬碟中儲存副本」。
+        瀏覽器暫時斷線不一定會清掉檔案；執行階段被刪除或回收時，`/content/` 的檔案才會失去。
+        想保留手冊、程式和 checkpoint，請先備份。notebook 本身則用上方選單「檔案 → 在雲端硬碟中儲存副本」，兩種存檔用途不同。
+        回來操作時先確認執行階段仍在；若已重設，重跑「0. 環境設定」及本段準備格，再依需要還原自己備份的檔案。
         """),
         code("""
         #@title 💾 存到 Google 雲端硬碟（會跳出授權視窗）
@@ -214,32 +229,24 @@ def _key(cell) -> str:
 
 
 def _keep_outputs(new_cells: list, old_path: Path) -> int:
-    """講師在 Colab 跑過、存回 GitHub 的輸出要留著：把舊檔的輸出接回新產生的程式格。
-
-    程式格數量沒變 → 依順序一格一格接（這次通常只改了說明文字）；
-    數量變了 → 依第一行（同一行出現第幾次）配對，配不到的格子就沒有輸出。
-    """
+    """只沿用程式內容完全相同的輸出；重排不靠位置配對，改過的程式清空輸出。"""
     if not old_path.exists():
         return 0
     old_code = [c for c in nbformat.read(old_path, as_version=4).cells if c.cell_type == "code"]
     new_code = [c for c in new_cells if c.cell_type == "code"]
-    if len(old_code) == len(new_code):
-        pairs = list(zip(new_code, old_code))
-    else:
-        seen, by_key = {}, {}
-        for c in old_code:
-            k = _key(c)
-            seen[k] = seen.get(k, 0) + 1
-            by_key[(k, seen[k])] = c
-        seen, pairs = {}, []
-        for c in new_code:
-            k = _key(c)
-            seen[k] = seen.get(k, 0) + 1
-            if (k, seen[k]) in by_key:
-                pairs.append((c, by_key[(k, seen[k])]))
+    by_source = {}
+    for cell in old_code:
+        by_source.setdefault(cell.source, []).append(cell)
+    pairs = []
+    for cell in new_code:
+        matches = by_source.get(cell.source, [])
+        if matches:
+            pairs.append((cell, matches.pop(0)))
     kept = 0
     for new, old in pairs:
         new.id = old.get("id", new.id)
+        if old.metadata.get("id"):
+            new.metadata["id"] = old.metadata["id"]
         if old.get("outputs"):
             new.outputs = old.outputs
             new.execution_count = old.get("execution_count")

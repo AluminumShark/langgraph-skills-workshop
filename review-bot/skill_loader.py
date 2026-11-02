@@ -1,7 +1,7 @@
 """skill_loader：AI 選手冊只看「名片」，選中了才翻開內文。
 
 漸進式揭露三層：
-1. 書背（名片）：SKILL.md 開頭兩條 --- 之間的 name 和 description，約 100 token，一直在桌上
+1. 名片：SKILL.md 開頭兩條 --- 之間的 name 和 description，挑選時提供給模型
 2. 內文：整份 SKILL.md，被選中才讀
 3. 附錄：scripts/、references/ 裡的檔案，用到才打開
 """
@@ -39,6 +39,8 @@ def 列出名片(只要: list[str] | None = None) -> list[dict]:
 
 def 挑手冊(model, 需求: str, cards: list[dict]) -> dict:
     """把所有名片給模型看，讓它挑一本；回傳被挑中的那張名片。"""
+    if not cards:
+        raise ValueError("找不到可用手冊；請先寫出 SKILL.md，再列出名片。")
     清單 = "\n".join(f"- {c['name']}：{c['description']}" for c in cards)
     回答 = model.invoke(
         "你要替下面的批改需求挑一本最適合的手冊。\n"
@@ -46,5 +48,8 @@ def 挑手冊(model, 需求: str, cards: list[dict]) -> dict:
         f"手冊名片：\n{清單}\n\n"
         "只回答手冊的 name，不要其他字。"
     ).text.strip()
-    提到的 = [(回答.find(c["name"]), c) for c in cards if c["name"] in 回答]
-    return min(提到的, key=lambda x: x[0])[1] if 提到的 else cards[0]
+    名稱 = 回答.strip("`\"' \n")
+    選項 = {c["name"]: c for c in cards}
+    if 名稱 not in 選項:
+        raise ValueError(f"模型沒有回傳唯一可用的手冊名稱：{回答!r}。可用名稱：{list(選項)}。請檢查名片與模型輸出；本次未選取手冊。")
+    return 選項[名稱]

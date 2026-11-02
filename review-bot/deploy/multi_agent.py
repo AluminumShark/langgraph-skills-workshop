@@ -9,7 +9,7 @@ START → 抓作業 ─Send×N→ 批一份 → 寄信前確認 → 寄信 → E
 - Tool：check_naming（手冊附的腳本）、run_code
 - MCP ：作業倉庫的 list_homework / get_homework / send_email（工具住在另一個程式裡）
 - Skill：friendly-feedback 手冊，當批改子 agent 的 system prompt
-- 子 agent：每份作業一個批改子 agent（一張乾淨的桌子）＋ 一個人設不同的驗證 agent
+- 子 agent：每份作業一個批改子 agent（一張乾淨的桌子）＋ 一個職責獨立的驗證 agent
 """
 
 import json
@@ -73,7 +73,7 @@ class 一份State(TypedDict):
     code: str
 
 
-# ---------- 驗證 agent：另一個人設，只檢查、不寫回饋 ----------
+# ---------- 驗證 agent：獨立檢查作業與回饋，不負責撰寫回饋 ----------
 
 稽核員人設 = (
     "你是嚴格的稽核員，只負責檢查別人寫的作業回饋，自己不寫回饋。\n"
@@ -107,7 +107,7 @@ def 驗證(model, code: str, feedback: str) -> dict:
 
 # ---------- 把零件接起來 ----------
 
-def 建立多agent小助教(model, mcp設定: dict | None = None, checkpointer=None):
+def 建立多agent小助教(model, mcp設定: dict | None = None, checkpointer=None, 只批學生: str | None = None):
     mcp設定 = mcp設定 or 作業倉庫設定()
     手冊 = 讀內文(列出名片(["friendly-feedback"])[0])
     批改員人設 = (
@@ -122,6 +122,10 @@ def 建立多agent小助教(model, mcp設定: dict | None = None, checkpointer=N
         # 抓作業不需要判斷，所以是「程式」呼叫 MCP 工具，不是 agent
         tools = await 取得MCP工具(mcp設定)
         名單 = json.loads(結果文字(await tools["list_homework"].ainvoke({})))
+        if 只批學生 is not None:
+            名單 = [a for a in 名單 if a["學生"] == 只批學生]
+            if not 名單:
+                raise ValueError(f"作業倉庫沒有學生：{只批學生}")
         for a in 名單:
             a["code"] = 結果文字(await tools["get_homework"].ainvoke({"student": a["學生"]}))
         return {"名單": 名單}
