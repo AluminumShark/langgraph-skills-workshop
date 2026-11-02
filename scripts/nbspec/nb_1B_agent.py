@@ -81,7 +81,7 @@ def cells():
         | 第 4 段 | 展開 `create_agent`：底下的迴圈其實長這樣 | 33 |
         | 第 5 段 | 同一段作業跑三次，順序不一樣；改 system prompt 加一句再跑 | 35 |
         | 第 6 段 | 它會繞圈：recursion limit | 36 |
-        | 第 7 段 | Tool 從哪裡來：自己寫的函式 vs MCP 插座，佔掉多少桌子 | 37 |
+        | 第 7 段 | Tool 從哪裡來：接上一個真的 MCP server，和自己寫的函式一起用；說明書佔掉多少桌子 | 37 |
 
         ## 怎麼用
 
@@ -89,7 +89,8 @@ def cells():
         2. 要改的只有表單欄位：**作業**、**system prompt 加的一句話**（第 5 段）。
         3. 每一段：**🤔 先寫預測 → ▶ 執行 → 👀 對照**；跑錯或斷線就從那一段的第一格重跑。
         """),
-        setup(NAME, support=["tools/__init__.py", "spec.md"]),
+        setup(NAME, support=["tools/__init__.py", "spec.md"],
+              packages=["mcp>=1.20,<2", "langchain-mcp-adapters>=0.3,<0.4"]),
         *my_homework(),
         md("""
         ---
@@ -351,53 +352,127 @@ def cells():
         > 📍 **對應簡報**：投影片 37「Tool 從哪裡來：自己寫的函式 vs MCP 插座」
 
         - **本地函式**：你自己寫、住在同一個程式裡（我們的三把工具）。
-        - **MCP**：工具住在別的程式或服務裡（例如 GitHub），透過一個共同的「插座」規格接進來，自帶帳號認證。
+        - **MCP**：工具住在**另一個程式或服務**裡（例如 GitHub），透過一個共同的「插座」規格接進來。
           之前社課教過的 MCP 就是這個。**MCP 不是另一種 agent，它是「工具」的外接方式。**
         - 代價：插座一接上，**所有**工具的說明書都會放到桌上（context window），不管這次用不用得到。
 
-        下面用一份**示意用**的 MCP 工具清單（規模仿 GitHub MCP server，約 40 個工具；名稱和說明是教學改寫）
-        和我們的三把本地工具比較，估算說明書各佔掉多少 token。
+        這一段真的接一個 MCP server。下一格寫出 `deploy/homework_mcp.py`：一個假的「作業倉庫」，
+        有三個工具：`list_homework`（誰交了作業）、`get_homework`（拿某位同學的作業）、`send_email`（寄信，假的，只寫進 `寄件匣.txt`）。
+        打開看就會發現：**它就是幾個普通的 Python 函式，上面加了 `@mcp.tool()`**，然後在自己的程式裡跑起來。
 
-        > 講師現場示範真的 MCP server 時，可以用 `langchain-mcp-adapters` 的 `MultiServerMCPClient` 取得工具，
-        > 直接丟進 `create_agent(model, tools=...)`，用法和本地工具一樣。
+        接著用 `langchain-mcp-adapters` 把這個插座接上，拿到的工具和三把本地工具一起交給 agent。
 
         ### 🤔 預測題
-        三把本地工具的說明書大約幾個 token？接上 40 個工具的 MCP 插座之後，桌上會多幾倍？
+        1. 從插座接進來的工具，agent 用起來和自己寫的 `@tool` 有什麼不一樣？
+        2. 請 agent「看小美交的作業、跑跑看有沒有錯」，它會先叫哪一個工具？會不會同時用到 MCP 的工具和本地的 `run_code`？
+        """),
+        writefile("deploy/homework_mcp.py"),
+        code("""
+        #@title ▶ 執行：接上 MCP 插座，讓 agent 同時用 MCP 工具和本地工具
+        {PREAMBLE}
+        from langchain.agents import create_agent
+        from langchain_mcp_adapters.client import MultiServerMCPClient
+        import agent
+
+        # 插座設定：用 stdio 在旁邊開一個「作業倉庫」程式，工具住在那個程式裡
+        插座 = MultiServerMCPClient({
+            "作業倉庫": {"command": sys.executable, "args": [str(BASE / "deploy" / "homework_mcp.py")], "transport": "stdio"},
+        })
+        mcp工具 = await 插座.get_tools()          # Colab 可以直接寫 await
+        mcp名稱 = {t.name for t in mcp工具}
+
+        print("🧰 工具箱裡現在有：")
+        for t in agent.小助教的工具 + mcp工具:
+            來源 = "MCP 插座（住在另一個程式）" if t.name in mcp名稱 else "本地函式（住在這個程式）"
+            print(f"  - {t.name:<14} ← {來源}")
+            print(f"      說明：{' '.join(t.description.split())[:70]}")
+            print(f"      參數：{list(t.args)}")
+
+        # 最小權限：這個 agent 只需要「讀」作業，所以不把會寄信的 send_email 交給它
+        讀作業的工具 = [t for t in mcp工具 if t.name != "send_email"]
+        小助教 = create_agent(
+            model, tools=agent.小助教的工具 + 讀作業的工具,
+            system_prompt=agent.基本_system_prompt + "學生交的作業放在作業倉庫裡，要用 get_homework 拿到程式碼。",
+        )
+        問題 = "幫我看小美交的作業，跑跑看有沒有錯。"
+        print(f"\\nUSER: {問題}\\n")
+        順序, 步 = [], 0
+        # MCP 的工具只能用 async 呼叫，所以這裡用 astream（不是 1-B 前面的 stream）
+        async for event in 小助教.astream({"messages": [{"role": "user", "content": 問題}]}, stream_mode="updates"):
+            for 節點, update in event.items():
+                步 += 1
+                for msg in (update or {}).get("messages", []):
+                    if getattr(msg, "tool_calls", None):
+                        for c in msg.tool_calls:
+                            順序.append(c["name"])
+                            來源 = "MCP 插座" if c["name"] in mcp名稱 else "本地函式"
+                            print(f"--- 第 {步} 步 | 節點: {節點} ---  模型決定呼叫 -> {c['name']}({c['args']})  ← {來源}")
+                    elif msg.type == "tool":
+                        print(f"--- 第 {步} 步 | 節點: {節點} ---  [{msg.name} 的結果] {msg.text[:200]}")
+                    else:
+                        print(f"--- 第 {步} 步 | 節點: {節點} ---  [AIMessage] {msg.text[:300]}")
+        print("\\n這次用工具的順序：", " → ".join(順序) or "（沒有用任何工具）")
+        記下("1-B 第 7 段：接上 MCP 插座", {"MCP 工具": sorted(mcp名稱), "用工具的順序": 順序})
+        """),
+        md("""
+        ### 👀 你看到了什麼
+
+        - 工具箱裡多了三把從插座接進來的工具。對 agent 來說，它們和 `run_code` 一模一樣：都有名字、說明書、參數，**都是「我可以呼叫的工具」**。
+        - 差別在**工具住在哪裡**：`get_homework` 真正執行的地方是旁邊那個「作業倉庫」程式，不是這個 notebook。
+          換成真的 GitHub MCP server，就是住在 GitHub 那邊，還要用帳號登入（OAuth）才接得上。
+        - 通常 agent 會先用 MCP 的 `get_homework` 拿到程式碼，再用本地的 `run_code` 執行它：**兩種來源的工具混在同一個迴圈裡用**。
+        - 插座上有 `send_email`，但我們**故意不把它交給這個 agent**：看作業不需要寄信，寄信又收不回來。工具給越少越安全，這叫最小權限（第 2 堂 2-C 會再講）。
+        - 這裡的插座是 stdio：作業倉庫就跑在這台 Colab 上。真正的「遠端 MCP」是一個網址，2-E 練習 1 會把同一個 server 變成網址再接一次。
+        """),
+        md("""
+        ### 🤔 預測題
+        三把本地工具的說明書大約幾個 token？接上作業倉庫的 3 個 MCP 工具呢？如果接的是真的 GitHub MCP server（幾十個工具），桌上會多幾倍？
         """),
         code(f"""
         #@title ▶ 執行：本地工具 vs MCP 插座，說明書佔掉多少桌子
         {{PREAMBLE}}
         import json
         from langchain_core.utils.function_calling import convert_to_openai_tool
-        from tools.check_indent import check_indent
-        from tools.read_spec import read_spec
-        from tools.run_code import run_code
+        from langchain_mcp_adapters.client import MultiServerMCPClient
+        import agent
 
-        # 示意用的 MCP 工具清單：(名稱, 說明, 參數)
-        MCP_工具 = {mcp_literal}
+        插座 = MultiServerMCPClient({{
+            "作業倉庫": {{"command": sys.executable, "args": [str(BASE / "deploy" / "homework_mcp.py")], "transport": "stdio"}},
+        }})
+        mcp工具 = await 插座.get_tools()
+
+        # 示意用：規模仿 GitHub MCP server 的工具清單（名稱與說明是教學改寫，不是官方原文）
+        GitHub規模的工具 = {mcp_literal}
 
         def 轉成說明書(name, desc, params):
             props = {{k: {{"type": v, "description": k}} for k, v in params.items()}}
             return {{"type": "function", "function": {{"name": name, "description": desc,
                     "parameters": {{"type": "object", "properties": props, "required": list(params)[:2]}}}}}}
 
-        本地說明書 = [convert_to_openai_tool(t) for t in [run_code, check_indent, read_spec]]
-        mcp說明書 = [轉成說明書(*t) for t in MCP_工具]
-        本地 = 估算_token(json.dumps(本地說明書, ensure_ascii=False))
-        插座 = 估算_token(json.dumps(mcp說明書, ensure_ascii=False))
+        def 估算說明書(說明書們):
+            return 估算_token(json.dumps(說明書們, ensure_ascii=False))
 
-        print(f"本地工具 {{len(本地說明書)}} 個：約 {{本地:,}} token  " + "█" * max(1, 本地 // 100))
-        print(f"MCP 工具 {{len(mcp說明書)}} 個：約 {{插座:,}} token  " + "█" * max(1, 插座 // 100))
-        print(f"\\n接上 MCP 插座後，每次問模型都要多放約 {{插座:,}} token 的說明書，是本地工具的 {{插座 / 本地:.1f}} 倍。")
+        三組 = [
+            ("本地工具（自己寫的）", [convert_to_openai_tool(t) for t in agent.小助教的工具]),
+            ("作業倉庫 MCP（真的接上）", [convert_to_openai_tool(t) for t in mcp工具]),
+            ("GitHub 規模的 MCP（示意）", [轉成說明書(*t) for t in GitHub規模的工具]),
+        ]
+        結果 = {{}}
+        for 名稱, 說明書們 in 三組:
+            結果[名稱] = 估算說明書(說明書們)
+            print(f"{{名稱:<18}} {{len(說明書們):>3}} 個工具：約 {{結果[名稱]:>5,}} token  " + "█" * max(1, 結果[名稱] // 100))
+        本地 = 結果["本地工具（自己寫的）"]
+        大的 = 結果["GitHub 規模的 MCP（示意）"]
+        print(f"\\n接上一個 GitHub 規模的插座，每次問模型都要多帶約 {{大的:,}} token 的說明書，是本地工具的 {{大的 / 本地:.1f}} 倍。")
         print("（token 數是用字數估算的，只看大小關係就好）")
-        記下("1-B 第 7 段：MCP 說明書的 token", {{"本地工具": 本地, "MCP 工具": 插座}})
+        記下("1-B 第 7 段：MCP 說明書的 token", 結果)
         """),
         md("""
         ### 👀 你看到了什麼
 
-        - 三把本地工具的說明書只佔一點點；接上一個 MCP 插座，桌上一下子多了好幾倍的說明書。
+        - 作業倉庫只有 3 個工具，說明書不多；但真的 MCP server 動輒幾十個工具，插座一接上，桌上一下子多了好幾倍的說明書。
           而且**每一次**問模型都要帶著，不管這次用不用得到。還記得 1-0 第 2 段的桌子嗎？
-        - 對 agent 來說，本地工具和 MCP 工具用起來一樣，都是「我可以呼叫的工具」；差別在工具住哪、怎麼認證。
+        - 對 agent 來說，本地工具和 MCP 工具用起來一樣；差別在工具住哪、怎麼認證、說明書佔多少桌子。
         - 下週（第 2 堂）會講怎麼用 **Skill** 把它包起來：寫一本手冊說「抓作業只用其中三個」，桌上只放一張名片。
 
         ---
