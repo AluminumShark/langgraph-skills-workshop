@@ -22,9 +22,9 @@
 
 | 堂／段落時間 | Notebook | 你會學到什麼 | 你要改什麼 | 對應投影片 |
 | --- | --- | --- | --- | --- |
-| 第 1 堂 0:10 | **1-0 Tool calling**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-0_tool_calling.ipynb) | 模型只會「說」它想用哪個工具，真正做事的是你的程式 | 不用改，看模型回的工具呼叫紙條 | 第 1 堂 5–15 |
-| 第 1 堂 0:28 | **1-A Workflow**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-A_workflow.ipynb) | 用 State、Node、Edge 畫出路線固定的流程 | 作業、最多重試次數、回饋字數上限 | 第 1 堂 16–26 |
-| 第 1 堂 1:02 | **1-B Agent**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-B_agent.ipynb) | 給 AI 一個工具箱，看它自己決定先用哪個工具；最後接上一個真的 MCP server | 作業、system prompt 裡的一句話 | 第 1 堂 28–37 |
+| 第 1 堂 0:10 | **1-0 Tool calling**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-0_tool_calling.ipynb) | 模型只會「說」它想用哪個工具，真正做事的是你的程式 | 不用改，看模型回的工具呼叫紙條 | 第 1 堂 6–16 |
+| 第 1 堂 0:28 | **1-A Workflow**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-A_workflow.ipynb) | 用 State、Node、Edge 畫出路線固定的流程 | 作業、最多重試次數、回饋字數上限 | 第 1 堂 17–28 |
+| 第 1 堂 1:02 | **1-B Agent**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/1-B_agent.ipynb) | 給 AI 一個工具箱，看它自己決定先用哪個工具；最後接上一個真的 MCP server | 作業、system prompt 裡的一句話 | 第 1 堂 30–39 |
 | 第 2 堂 0:08 | **2-A Skills**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-A_skills.ipynb) | 程式不動、只換一本手冊（SKILL.md），AI 的行為就變了 | 兩份 SKILL.md 的規則與 description | 第 2 堂 5–12 |
 | 第 2 堂 0:28 | **2-B 程式・文字・腳本**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-B_code_text_script.ipynb) | 同一個檢查放進手冊文字、腳本、流程節點，各跑三次比比看 | 不用改，執行三個版本並比對 | 第 2 堂 13–19 |
 | 第 2 堂 0:58 | **2-C 資安**<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-C_security.ipynb) | 別人寫的手冊可能藏著壞指令（prompt injection） | 不用改，找出藏指令的那一行 | 第 2 堂 21–23 |
@@ -145,6 +145,11 @@ uv run python scripts/build_notebooks.py
 ```
 
 只想產生其中幾本，在後面加上名稱開頭（例如 `1-A 2-B`）。
+
+**在 Colab 跑過、存回 GitHub 的輸出會保留**：重新產生時，每個程式格會接回原本存的輸出（程式格數量沒變就照順序接）。
+所以只改說明文字時，輸出仍然對得上；如果改了會印出東西的程式，記得回 Colab 重跑一次再存。
+在 Colab 上直接改的文字（例如格子標題），也要同步改進 `scripts/nbspec/`，不然下次產生會被蓋掉。
+重新產生前先 `git pull`，拿到 Colab 存回來的最新版本。
 
 在本機把每本 notebook 從頭跑到尾，確認每一格都跑得過：
 

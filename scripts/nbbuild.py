@@ -9,11 +9,15 @@
 
 from __future__ import annotations
 
+import copy
+import hashlib
+import json
 import textwrap
 from pathlib import Path
 
 import nbformat
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
+from nbformat.v4.rwbase import split_lines
 
 REPO = Path(__file__).resolve().parents[1]
 RB = REPO / "review-bot"
@@ -130,6 +134,38 @@ print(f"🤖 模型說：{{回覆.strip()}}")'''
     return cell
 
 
+def project_intro(這本: str):
+    """每本都一樣的「小專案」說明，讓只看 notebook、沒看簡報的人也知道在做什麼。
+    這本：一句話說明「這本 notebook 做的是小助教的哪一塊」。"""
+    return md(f"""
+    ## 🎯 這兩堂課的小專案：作業小助教
+
+    **作業小助教**是一個幫忙批改 Python 作業的小程式：你交給它一段作業，它回你一份**固定格式的回饋**，
+    一定有兩段：**「優點：」**寫得好的地方、**「改進：」**哪裡可以更好、怎麼改。
+
+    選它當練習，是因為它剛好三種東西都用得到：
+
+    | 小助教需要的 | 例子 | 我們用什麼做 |
+    | --- | --- | --- |
+    | 順序不能錯的步驟 | 一定要先確認程式的「文法」沒錯，才給回饋 | 用程式畫好的**流程**（LangGraph，第 1 堂） |
+    | 需要判斷的事 | 回饋怎麼寫、要不要真的執行程式看看 | 交給 **AI**（agent，第 1 堂） |
+    | 做法和規矩 | 回饋的語氣要溫和還是嚴格、好的變數名稱長什麼樣 | 寫成給 AI 看的**手冊**（Skill，第 2 堂） |
+
+    小助教的零件（之後會一個一個出現）：
+
+    | 零件 | 白話說它在做什麼 |
+    | --- | --- |
+    | `check_syntax`（檢查語法） | 只看程式的「文法」對不對，例如括號有沒有關好、冒號有沒有漏；**不會執行程式** |
+    | `explain_error`（解釋錯誤） | 語法錯的時候，用一句話告訴學生錯在第幾行 |
+    | `give_feedback`（寫回饋） | 寫出「優點＋改進」兩段回饋，這一步才用到 AI |
+    | `check_format`（檢查格式） | 檢查回饋有沒有兩段、有沒有太長；不合格就退回去重寫 |
+    | 工具：`run_code`、`check_indent`、`read_spec`、`check_naming` | 真的執行作業、檢查縮排、讀題目要求、檢查變數名稱 |
+    | 手冊：`friendly-feedback`、`strict-review` | 告訴 AI 回饋要溫和鼓勵，還是嚴格審查 |
+
+    👉 **這本 notebook 做的是：**{這本}
+    """)
+
+
 def my_homework():
     """（選用）讓學生貼自己的作業：表單選「我的作業」時會讀這個檔案。"""
     return [
@@ -172,14 +208,89 @@ def ending():
     ]
 
 
+def _key(cell) -> str:
+    """程式格的「身分」：第一行（#@title 或 %%writefile 那一行）。"""
+    return cell.source.splitlines()[0] if cell.source else ""
+
+
+def _keep_outputs(new_cells: list, old_path: Path) -> int:
+    """講師在 Colab 跑過、存回 GitHub 的輸出要留著：把舊檔的輸出接回新產生的程式格。
+
+    程式格數量沒變 → 依順序一格一格接（這次通常只改了說明文字）；
+    數量變了 → 依第一行（同一行出現第幾次）配對，配不到的格子就沒有輸出。
+    """
+    if not old_path.exists():
+        return 0
+    old_code = [c for c in nbformat.read(old_path, as_version=4).cells if c.cell_type == "code"]
+    new_code = [c for c in new_cells if c.cell_type == "code"]
+    if len(old_code) == len(new_code):
+        pairs = list(zip(new_code, old_code))
+    else:
+        seen, by_key = {}, {}
+        for c in old_code:
+            k = _key(c)
+            seen[k] = seen.get(k, 0) + 1
+            by_key[(k, seen[k])] = c
+        seen, pairs = {}, []
+        for c in new_code:
+            k = _key(c)
+            seen[k] = seen.get(k, 0) + 1
+            if (k, seen[k]) in by_key:
+                pairs.append((c, by_key[(k, seen[k])]))
+    kept = 0
+    for new, old in pairs:
+        new.id = old.get("id", new.id)
+        if old.get("outputs"):
+            new.outputs = old.outputs
+            new.execution_count = old.get("execution_count")
+            for k in ("id", "outputId", "colab"):
+                if k in old.metadata:
+                    new.metadata[k] = old.metadata[k]
+            kept += 1
+    return kept
+
+
 def build(name: str, cells: list) -> Path:
+    out = REPO / "notebooks" / f"{name}.ipynb"
     nb = new_notebook(cells=cells)
     nb.metadata = {
         "colab": {"provenance": [], "toc_visible": True, "name": f"{name}.ipynb"},
         "kernelspec": {"name": "python3", "display_name": "Python 3"},
         "language_info": {"name": "python"},
     }
-    out = REPO / "notebooks" / f"{name}.ipynb"
+    _keep_outputs(nb.cells, out)
+    _stable_ids(nb.cells, out)
     nbformat.validate(nb)
-    nbformat.write(nb, out)
+    # 和 Colab 存檔的格式一樣（縮排 2 格、metadata 裡也有 id），兩邊互相存檔時 diff 才會小
+    out.write_text(_colab_json(nb), encoding="utf-8", newline="\n")
     return out
+
+
+def _colab_json(nb) -> str:
+    """照 Colab 存檔的樣子輸出：縮排 2 格、cell 欄位照字母排、metadata 和輸出保留原本順序、結尾不換行。
+    （nbformat.writes 一定用縮排 1 格，所以自己輸出。）"""
+    nb = split_lines(copy.deepcopy(nb))
+    cells = [{k: cell[k] for k in sorted(cell)} for cell in nb["cells"]]
+    meta = {k: ({kk: v[kk] for kk in sorted(v)} if isinstance(v, dict) else v) for k, v in sorted(nb["metadata"].items())}
+    data = {"cells": cells, "metadata": meta, "nbformat": nb["nbformat"], "nbformat_minor": nb["nbformat_minor"]}
+    return json.dumps(data, indent=2, ensure_ascii=False)
+
+
+def _stable_ids(cells: list, old_path: Path) -> None:
+    """文字格沿用舊檔裡同內容那一格的 id；新的格子用內容算出固定的 id（每次產生都一樣）。"""
+    old_ids = {}
+    if old_path.exists():
+        for c in nbformat.read(old_path, as_version=4).cells:
+            if c.cell_type == "markdown":
+                old_ids.setdefault(c.source, c.get("id"))
+    used = set()
+    for i, c in enumerate(cells):
+        if c.cell_type == "markdown" and old_ids.get(c.source) and old_ids[c.source] not in used:
+            c.id = old_ids[c.source]
+        elif c.cell_type == "markdown" or "outputId" not in c.metadata:
+            if not (c.cell_type == "code" and c.metadata.get("id")):
+                c.id = hashlib.sha1(f"{i}:{c.source}".encode("utf-8")).hexdigest()[:8]
+        if c.id in used:
+            c.id = hashlib.sha1(f"{i}:{c.id}".encode("utf-8")).hexdigest()[:8]
+        used.add(c.id)
+        c.metadata["id"] = c.id

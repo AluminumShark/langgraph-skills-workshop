@@ -5,12 +5,12 @@ NTU AI Club 技術工作坊，兩堂各 120 分鐘。講者：李維（Levi, @Al
 ## 這個 repo 的狀態
 
 - 上課日期：第 1 堂 2026-11-09（一）、第 2 堂 2026-11-16（一）。公開 repo：`AluminumShark/langgraph-skills-workshop`。
-- `slides/session1.html`、`slides/session2.html`：兩堂課的簡報，**已完成**，單一 HTML，只依賴 Google Fonts。← → 換頁、N 看講者備註、F 全螢幕。已填日期與 repo 連結；第 1 堂投影片 36 已修正 recursion limit（1.1 起預設 10007，notebook 自己設 25）；第 2 堂主線多了「RAG 放哪裡」（投影片 34）和「部署地圖」（投影片 41），「上雲端」補充在投影片 47–54（對應 2-E），參考來源在 55–56。每頁底部的進度列是靜態 markup，增刪投影片時要整份重新產生。
+- `slides/session1.html`、`slides/session2.html`：兩堂課的簡報，**已完成**，單一 HTML，只依賴 Google Fonts。← → 換頁、N 看講者備註、F 全螢幕。已填日期與 repo 連結；第 1 堂現在 45 張：投影片 5 是小專案「作業小助教」、19 是「四個工作站」流程圖，MCP 在 35（緊接在「模型只看得到說明書」之後）。第 1 堂投影片 38 已修正 recursion limit（1.1 起預設 10007，notebook 自己設 25）；第 2 堂主線多了「RAG 放哪裡」（投影片 34）和「部署地圖」（投影片 41），「上雲端」補充在投影片 47–54（對應 2-E），參考來源在 55–56。每頁底部的進度列是靜態 markup，增刪投影片時要整份重新產生。
 - `docs/syllabus.md`：完整課綱（時間表、觀念清單、notebook 規格、最低完成標準）。**任何實作都以它為準。**
 - `docs/slides-session{1,2}-outline.md`：投影片逐張大綱，含每張的「互動／停一下」，notebook 的段落要對得上。
 - `docs/reuse-from-old-workshop.md`：從舊教案 `reference/old-workshop/` 抄出來、已改成 review-bot 語境的程式碼，每段標了該放哪本 notebook。
 - `docs/original-proposal.txt`：最初的提案，只供對照。
-- `notebooks/`：**已完成**，七本核心 notebook ＋ 課後選做 `2-E_deploy.ipynb`。1-B 第 7 段接一個真的 MCP server（`review-bot/deploy/homework_mcp.py`，stdio）；2-E 的四個練習是：開 MCP server（stdio 與 Streamable HTTP）、把整張分工圖跑一次（MCP、`Send` 子 agent、驗證 agent、`interrupt`）、包成 API、上線前檢查。MCP 套件要釘 `mcp>=1.20,<2` 和 `langchain-mcp-adapters>=0.3,<0.4`（版本不配會 import 失敗）。**由 `scripts/build_notebooks.py` 產生，不要直接改 `.ipynb`**：格子定義在 `scripts/nbspec/nb_*.py`，共用的格子（0. 環境設定、收尾三格、每段起點）在 `scripts/nbbuild.py`。每段標有「📍 對應簡報：投影片 N」。
+- `notebooks/`：**已完成**，七本核心 notebook ＋ 課後選做 `2-E_deploy.ipynb`。1-B 第 7 段接一個真的 MCP server（`review-bot/deploy/homework_mcp.py`，stdio）；2-E 的四個練習是：開 MCP server（stdio 與 Streamable HTTP）、把整張分工圖跑一次（MCP、`Send` 子 agent、驗證 agent、`interrupt`）、包成 API、上線前檢查。MCP 套件要釘 `mcp>=1.20,<2` 和 `langchain-mcp-adapters>=0.3,<0.4`（版本不配會 import 失敗）。**由 `scripts/build_notebooks.py` 產生，不要直接改 `.ipynb`**（重新產生會保留講師在 Colab 存回 GitHub 的輸出和 cell id，輸出格式照 Colab 的 JSON 排版；改之前先 `git pull`；在 Colab 改的文字要同步回 nbspec）：格子定義在 `scripts/nbspec/nb_*.py`，共用的格子（0. 環境設定、收尾三格、每段起點）在 `scripts/nbbuild.py`。每段標有「📍 對應簡報：投影片 N」。
 - `review-bot/`：**已完成**，講師版原始碼；notebook 的 `%%writefile` 內容直接讀這裡，保證一致。`llm.py`（provider 轉接頭：`google.colab.ai` 用 prompt 模擬 tool calling，備案是 Gemini key）與 `workshop.py`（notebook 小工具）是工作坊基礎設施，由「0. 環境設定」寫出。
 - 本機環境用 uv（`pyproject.toml`、`uv.lock`、Python 3.12）；Colab 第一格也用 `uv pip install` 裝套件。`uv run python scripts/verify_notebooks.py` 用 `tests/mock_colab/` 的假 `google.colab` 與假模型把每本跑到尾（只驗流程，不驗真實模型品質）。
 
