@@ -100,7 +100,7 @@ Oct 30, 2026 · @Levi
 | 0:10–0:28 | 先備知識：AI 到底怎麼「做事」 | 觀念 1–6。重點在 tool calling：讓學生看模型回傳的那段「我想呼叫 run\_code」的 JSON，再看 Python 真的去執行、把結果貼回去。畫出 agent 迴圈。Workflow 與 agent 的差別。 | notebook 1-0：執行一格，看到模型回傳的工具呼叫 JSON |
 | 0:28–0:52 | Notebook 1-A：Workflow，路線由程式決定 | 觀念 7–9。先不接 AI，三個純 Python 節點：State 是 dict、Node 是函式、Edge 是箭頭、條件邊是 if；`stream_mode="values"` 看訂單紙逐步填滿。再把 give\_feedback 換成呼叫模型，加 check\_format 退回重寫，講三個設計模式。 | 換三段作業先預測再執行；調「最多重試次數」看 retries 變化 |
 | 0:52–1:02 | 中場休息 |  |  |
-| 1:02–1:30 | Notebook 1-B：Agent，路線由 AI 決定；tool 與 MCP | 觀念 10–11、25。給模型三個工具：`run_code`、`check_indent（縮排與行長，故意不碰命名，留給第 2 堂 2-B）`、`read_spec`。用 `create_agent(model, tools)` 做出 agent，印出每一步選的工具；展開底下的兩節點 LangGraph；同一段作業跑兩次看順序不同；故意繞圈被 recursion limit 停下。最後 5 分鐘講 tool 的兩種來源：自己寫的本地函式 vs 透過 MCP 插上的外部工具（之前社課教過的 MCP 在這裡定位：它是 tool 的標準插座，不是另一種 agent）。 | 先預測它會先用哪個工具，再執行比對；改 system prompt 加一句看順序有沒有變；看 MCP 接上後 tool 定義占掉多少 token |
+| 1:02–1:30 | Notebook 1-B：Agent，路線由 AI 決定；tool 與 MCP | 觀念 10–11、25。給模型三個工具：`run_code`、`check_indent（縮排與行長，故意不碰命名，留給第 2 堂 2-B）`、`read_spec`，先看 `run_code` 的圍欄和「模型只看得到說明書」；接著講 tool 的兩種來源：自己寫的本地函式 vs 透過 MCP 插上的外部工具（之前社課教過的 MCP 在這裡定位：它是 tool 的標準插座，不是另一種 agent），在 Colab 裡真的接上一個「作業倉庫」MCP server，和本地工具一起交給 agent。然後用 `create_agent(model, tools)` 做出 agent，印出每一步選的工具；展開底下的兩節點 LangGraph；同一段作業跑三次看順序不同；最後故意繞圈被 recursion limit 停下，直接接到第四站「用程式限制 AI」。 | 先預測它會先用哪個工具，再執行比對；改 system prompt 加一句看順序有沒有變；看 MCP 接上後 tool 定義占掉多少 token |
 | 1:30–1:50 | 何時鎖死、何時放手 | 觀念 12–13。0.99^10 的數學；workflow 穩但只處理想到的情況，agent 彈性大但會繞路；「雙拼」第一次出現：把 agent 放進 workflow 的某一個節點。Harness 的比喻。預告：今天學的程式、tool、MCP 是五個抽屜的前三格，下週補上 Skill 和子 agent。 | 填「該鎖死還是放手」學習單 |
 | 1:50–2:00 | 收尾 | 今天三件事；課後作業；預告第 2 堂。 |  |
 

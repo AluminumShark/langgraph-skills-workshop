@@ -77,19 +77,20 @@ def cells():
         | --- | --- | --- |
         | 第 1 段 | 寫出三個工具；看 `run_code` 的圍欄怎麼擋下危險的作業 | 29–30 |
         | 第 2 段 | 模型看不到你的程式碼，只看得到工具的說明書 | 32 |
-        | 第 3 段 | 一行做出 agent：`create_agent`；先猜它會先用哪個工具 | 31、34 |
-        | 第 4 段 | 展開 `create_agent`：底下的迴圈其實長這樣 | 33 |
-        | 第 5 段 | 同一段作業跑三次，順序不一樣；改 system prompt 加一句再跑 | 35 |
-        | 第 6 段 | 它會繞圈：recursion limit | 36 |
-        | 第 7 段 | Tool 從哪裡來：接上一個真的 MCP server，和自己寫的函式一起用；說明書佔掉多少桌子 | 37 |
+        | 第 3 段 | Tool 從哪裡來：接上一個真的 MCP server，和自己寫的函式一起用；說明書佔掉多少桌子 | 33 |
+        | 第 4 段 | 一行做出 agent：`create_agent`；先猜它會先用哪個工具 | 31、35 |
+        | 第 5 段 | 展開 `create_agent`：底下的迴圈其實長這樣 | 34 |
+        | 第 6 段 | 同一段作業跑三次，順序不一樣；改 system prompt 加一句再跑 | 36 |
+        | 第 7 段 | 它會繞圈：recursion limit | 37 |
 
         ## 怎麼用
 
         1. 先執行 **「0. 環境設定」**。
-        2. 要改的只有表單欄位：**作業**、**system prompt 加的一句話**（第 5 段）。
+        2. 要改的只有表單欄位：**作業**、**system prompt 加的一句話**（第 6 段）。
         3. 每一段：**🤔 先寫預測 → ▶ 執行 → 👀 對照**；跑錯或斷線就從那一段的第一格重跑。
         """),
-        setup(NAME, support=["tools/__init__.py", "spec.md"],
+        setup(NAME, support=["tools/__init__.py", "tools/run_code.py", "tools/check_indent.py", "tools/read_spec.py",
+                           "agent.py", "spec.md"],
               packages=["mcp>=1.20,<2", "langchain-mcp-adapters>=0.3,<0.4"]),
         *my_homework(),
         md("""
@@ -169,187 +170,13 @@ def cells():
           只寫一句「執行程式」、沒寫什麼時候用，模型可能永遠不會叫它。
         - 第 2 堂的 Skill 也是同一件事：AI 只看手冊的「名片」決定要不要翻開。
         """),
-        md(f"""
-        ---
-        ## 第 3 段：一行做出 agent，看它每一步選了什麼
-
-        > 📍 **對應簡報**：投影片 31「一行做出 agent：create_agent」、投影片 34「看它每一步選了什麼：pretty_trace」
-
-        下一格寫出 `agent.py`：裡面的 `建立_agent` 只有一行 `create_agent(model, tools=..., system_prompt=...)`，
-        這是 LangChain 1.0（2025 年 10 月）之後的標準寫法。`pretty_trace` 會把 agent 的每一步攤開印出來。
-
-        ### 🤔 預測題（寫在學習單上）
-        作業選「變數打錯字」（`return summ`，但變數叫 `total`），題目要求是「寫一個 add(a, b)」。
-        1. 它**第一個**會用哪個工具？
-        2. 它總共會用幾次工具？三把工具都會用到嗎？
-        """),
-        writefile("agent.py"),
-        code(f"""
-        #@title ▶ 執行：create_agent 做出的 agent，看它每一步
-        作業 = "變數打錯字"  #@param {作業選項}
-        題目要求 = "{預設題目}"  #@param {{type:"string"}}
-        {{PREAMBLE}}
-        import agent
-
-        (BASE / "spec.md").write_text(題目要求, encoding="utf-8")   # read_spec 會讀這個檔案
-        小助教 = agent.建立_agent(model)
-        events = agent.pretty_trace(小助教, agent.作業訊息(取得作業(作業)))
-        print("這次用工具的順序：", " → ".join(agent.工具順序(events)) or "（沒有用任何工具）")
-        記下(f"1-B 第 3 段：create_agent（{{作業}}）", events)
-        """),
-        md("""
-        ### 👀 你看到了什麼
-
-        - 每一個「節點: model」是模型在想下一步；「節點: tools」是你的程式在執行它選的工具。一來一回就是 1-0 那個迴圈轉一圈。
-        - 最後一步的 `AIMessage` 沒有再叫工具，迴圈就結束了。
-        - 對照你的預測：它先用了哪一個？有沒有哪把工具根本沒用？下一段會看到這個順序每次可能不一樣。
-        - `invoke` 只給你終點；`stream`（`pretty_trace` 用的）把過程攤開。
-        """),
         md("""
         ---
-        ## 第 4 段：展開 create_agent，那個迴圈其實長這樣
+        ## 第 3 段：Tool 從哪裡來：自己寫的函式 vs MCP 插座
 
-        > 📍 **對應簡報**：投影片 33「展開 create_agent」
+        > 📍 **對應簡報**：投影片 33「Tool 從哪裡來：自己寫的函式 vs MCP 插座」
 
-        `create_agent` 一行底下，就是 1-A 學過的三個零件：
-        一個問模型的節點 `ask_model`、一個跑工具的節點 `tools`、一條「有沒有要用工具」的 if（`tools_condition`），繞成一個圈。
-        程式在 `agent.py` 的 `建立_展開版_agent`。
-
-        | 元件 | 做什麼 |
-        | --- | --- |
-        | `@tool` | 函式 → 模型看得到的工具 |
-        | `bind_tools` | 工具說明書附在每次呼叫上 |
-        | `ask_model` | 問模型，回文字或 tool_calls |
-        | `ToolNode` | 讀 tool_calls、執行、包結果 |
-        | `tools_condition` | 內建路由：有 tool_calls → tools，沒有 → END |
-        | `add_edge("tools", "ask_model")` | 工具跑完回去問模型，形成循環 |
-
-        ### 🤔 預測題
-        流程圖上會有幾個節點？哪一條是條件邊？
-        """),
-        code(f"""
-        #@title ▶ 執行：自己用 LangGraph 組出同一個 agent
-        作業 = "變數打錯字"  #@param {作業選項}
-        {{PREAMBLE}}
-        import agent
-
-        展開版 = agent.建立_展開版_agent(model)
-        顯示流程圖(展開版)
-        events = agent.pretty_trace(展開版, agent.作業訊息(取得作業(作業)))
-        記下(f"1-B 第 4 段：展開版 agent（{{作業}}）", events)
-        """),
-        md("""
-        ### 👀 你看到了什麼
-
-        - 只有兩個節點：`ask_model` 和 `tools`。從 `ask_model` 出來的是條件邊（虛線）：要用工具就去 `tools`，不用就結束。
-        - `tools` 跑完一定回到 `ask_model`，這條往回指的箭頭就是迴圈。
-        - LangGraph 和 LangChain 不是對手，是上下層：`create_agent` 回傳的就是一個 LangGraph。
-        """),
-        md(f"""
-        ---
-        ## 第 5 段：同一段作業跑三次，順序不一樣
-
-        > 📍 **對應簡報**：投影片 35「同一段作業跑三次，順序不一樣」
-
-        這是 agent 和 workflow 最大的差別：**路線不是你畫的，是它當下決定的**。
-
-        ### 🤔 預測題（兩輪）
-        1. 先讓「system prompt 加一句」保持空白，執行。三次用工具的順序會一樣嗎？
-        2. 再把它改成 **一定要先讀題目要求**，執行。這次順序有沒有變？三次都一樣了嗎？
-        """),
-        code(f"""
-        #@title ▶ 執行：同一段作業跑三次，比較用工具的順序
-        作業 = "變數打錯字"  #@param {作業選項}
-        system_prompt_加一句 = ""  #@param ["", "一定要先讀題目要求", "一定要先執行作業看結果", "不要使用任何工具"] {{allow-input: true}}
-        {{PREAMBLE}}
-        import agent
-
-        system_prompt = agent.基本_system_prompt + system_prompt_加一句
-        print("system prompt：", system_prompt, "\\n")
-        小助教 = agent.建立_agent(model, system_prompt=system_prompt)
-
-        三次 = []
-        for i in range(3):
-            result = 小助教.invoke({{"messages": [{{"role": "user", "content": agent.作業訊息(取得作業(作業))}}]}})
-            順序 = agent.工具順序(result["messages"])
-            三次.append(順序)
-            print(f"========== 第 {{i + 1}} 次 ==========")
-            print("用工具的順序：", " → ".join(順序) or "（沒有用任何工具，直接評語）")
-            print(result["messages"][-1].text[:300])
-            print()
-
-        print("三次順序都一樣嗎？", "是" if all(x == 三次[0] for x in 三次) else "不一樣")
-        記下(f"1-B 第 5 段：跑三次（加一句：{{system_prompt_加一句 or '無'}}）", {{"三次的工具順序": 三次}})
-        """),
-        md("""
-        ### 👀 你看到了什麼
-
-        - 沒加那句時，三次的順序常常不同：有時先 `run_code`、有時先 `read_spec`，有時甚至沒跑程式就直接評語。
-          **這不是 bug，是 agent 的天性**：同一程式、同一作業，每次可能走不同路徑。
-        - 加了「一定要先讀題目要求」之後，第一步大多會變成 `read_spec`，但**不保證每次都聽話**：
-          寫在 prompt 裡的是「建議」，寫在流程圖裡的才是「一定」。
-        - 所以第 4 站要學：哪些步驟該鎖死在流程裡，哪些可以放手讓 AI 決定。
-        """),
-        md("""
-        ---
-        ## 第 6 段：它會繞圈：recursion limit
-
-        > 📍 **對應簡報**：投影片 36「它會繞圈：recursion limit」
-
-        這是講師示範：給 agent 一個**故意永遠失敗**的工具 `always_fail`，再叫它「一定要成功才停」。
-        我們在程式裡設 `recursion_limit=25`：超過 25 步，LangGraph 就強制停下來。
-        （舊版 LangGraph 預設就是 25；從 1.1 版起，不設的話上限是 10007 步，所以要自己設。）
-
-        ### 🤔 預測題
-        模型會呼叫 `always_fail` 幾次才被停下來？停下來時會看到什麼錯誤？
-        """),
-        code("""
-        #@title ▶ 執行：一個永遠失敗的工具，看 agent 被 recursion limit 停下來
-        {PREAMBLE}
-        from langchain.agents import create_agent
-        from langchain.tools import tool
-        from langgraph.errors import GraphRecursionError
-
-        @tool
-        def always_fail() -> str:
-            \"\"\"做一件很重要的事。失敗的話請再試一次，直到成功為止。\"\"\"
-            return "執行錯誤：RuntimeError: 還是不行，請再試一次"
-
-        繞圈agent = create_agent(
-            model, tools=[always_fail],
-            system_prompt="你的任務是呼叫 always_fail 直到它成功為止。不管失敗幾次都要再試，不要放棄，也不要用文字回答。",
-        )
-        次數 = 0
-        try:
-            for step, event in enumerate(繞圈agent.stream({"messages": [{"role": "user", "content": "開始吧"}]},
-                                                       config={"recursion_limit": 25}, stream_mode="updates"), start=1):
-                for node, update in event.items():
-                    for msg in (update or {}).get("messages", []):
-                        if getattr(msg, "tool_calls", None):
-                            次數 += 1
-                            print(f"--- 第 {step} 步 | 節點: {node} ---  模型決定呼叫 -> always_fail()")
-                        elif msg.type == "tool":
-                            print(f"--- 第 {step} 步 | 節點: {node} ---  [ToolMessage] {msg.text}")
-                        else:
-                            print(f"--- 第 {step} 步 | 節點: {node} ---  [AIMessage] {msg.text[:80]}")
-            print("\\n（這次模型自己放棄了，沒有撞到上限。再執行一次看看）")
-        except GraphRecursionError as e:
-            print(f"\\n🛑 GraphRecursionError：{str(e).splitlines()[0]}")
-        print(f"模型總共呼叫了 always_fail {次數} 次")
-        記下("1-B 第 6 段：recursion limit", {"呼叫次數": 次數})
-        """),
-        md("""
-        ### 👀 你看到了什麼
-
-        - 模型一直叫 `always_fail`，每一圈都在花 token，自己停不下來。
-        - 第 25 步時 LangGraph 丟出 `GraphRecursionError`，強制結束。這是今天第一個「**用程式限制 AI**」的例子。
-        - 1-0 的「最多 5 圈」、1-A 的「最多重試次數」、這裡的 `recursion_limit`，都是同一個想法：不能錯的事寫進程式。
-        """),
-        md("""
-        ---
-        ## 第 7 段：Tool 從哪裡來：自己寫的函式 vs MCP 插座
-
-        > 📍 **對應簡報**：投影片 37「Tool 從哪裡來：自己寫的函式 vs MCP 插座」
+        上一段看到：模型只看得到工具的說明書。**說明書不一定是你寫的**：別人做好的工具，也能從插座接進來。
 
         - **本地函式**：你自己寫、住在同一個程式裡（我們的三把工具）。
         - **MCP**：工具住在**另一個程式或服務**裡（例如 GitHub），透過一個共同的「插座」規格接進來。
@@ -360,7 +187,7 @@ def cells():
         有三個工具：`list_homework`（誰交了作業）、`get_homework`（拿某位同學的作業）、`send_email`（寄信，假的，只寫進 `寄件匣.txt`）。
         打開看就會發現：**它就是幾個普通的 Python 函式，上面加了 `@mcp.tool()`**，然後在自己的程式裡跑起來。
 
-        接著用 `langchain-mcp-adapters` 把這個插座接上，拿到的工具和三把本地工具一起交給 agent。
+        接著用 `langchain-mcp-adapters` 把這個插座接上，拿到的工具和三把本地工具一起交給 agent（`create_agent` 投影片 31 已經看過，第 4 段會細看它每一步）。
 
         ### 🤔 預測題
         1. 從插座接進來的工具，agent 用起來和自己寫的 `@tool` 有什麼不一樣？
@@ -412,7 +239,7 @@ def cells():
                     else:
                         print(f"--- 第 {步} 步 | 節點: {節點} ---  [AIMessage] {msg.text[:300]}")
         print("\\n這次用工具的順序：", " → ".join(順序) or "（沒有用任何工具）")
-        記下("1-B 第 7 段：接上 MCP 插座", {"MCP 工具": sorted(mcp名稱), "用工具的順序": 順序})
+        記下("1-B 第 3 段：接上 MCP 插座", {"MCP 工具": sorted(mcp名稱), "用工具的順序": 順序})
         """),
         md("""
         ### 👀 你看到了什麼
@@ -465,7 +292,7 @@ def cells():
         大的 = 結果["GitHub 規模的 MCP（示意）"]
         print(f"\\n接上一個 GitHub 規模的插座，每次問模型都要多帶約 {{大的:,}} token 的說明書，是本地工具的 {{大的 / 本地:.1f}} 倍。")
         print("（token 數是用字數估算的，只看大小關係就好）")
-        記下("1-B 第 7 段：MCP 說明書的 token", 結果)
+        記下("1-B 第 3 段：MCP 說明書的 token", 結果)
         """),
         md("""
         ### 👀 你看到了什麼
@@ -474,7 +301,185 @@ def cells():
           而且**每一次**問模型都要帶著，不管這次用不用得到。還記得 1-0 第 2 段的桌子嗎？
         - 對 agent 來說，本地工具和 MCP 工具用起來一樣；差別在工具住哪、怎麼認證、說明書佔多少桌子。
         - 下週（第 2 堂）會講怎麼用 **Skill** 把它包起來：寫一本手冊說「抓作業只用其中三個」，桌上只放一張名片。
+        """),
+        md(f"""
+        ---
+        ## 第 4 段：一行做出 agent，看它每一步選了什麼
 
+        > 📍 **對應簡報**：投影片 31「一行做出 agent：create_agent」、投影片 35「看它每一步選了什麼：pretty_trace」
+
+        下一格寫出 `agent.py`：裡面的 `建立_agent` 只有一行 `create_agent(model, tools=..., system_prompt=...)`，
+        這是 LangChain 1.0（2025 年 10 月）之後的標準寫法。`pretty_trace` 會把 agent 的每一步攤開印出來。
+
+        ### 🤔 預測題（寫在學習單上）
+        作業選「變數打錯字」（`return summ`，但變數叫 `total`），題目要求是「寫一個 add(a, b)」。
+        1. 它**第一個**會用哪個工具？
+        2. 它總共會用幾次工具？三把工具都會用到嗎？
+        """),
+        writefile("agent.py"),
+        code(f"""
+        #@title ▶ 執行：create_agent 做出的 agent，看它每一步
+        作業 = "變數打錯字"  #@param {作業選項}
+        題目要求 = "{預設題目}"  #@param {{type:"string"}}
+        {{PREAMBLE}}
+        import agent
+
+        (BASE / "spec.md").write_text(題目要求, encoding="utf-8")   # read_spec 會讀這個檔案
+        小助教 = agent.建立_agent(model)
+        events = agent.pretty_trace(小助教, agent.作業訊息(取得作業(作業)))
+        print("這次用工具的順序：", " → ".join(agent.工具順序(events)) or "（沒有用任何工具）")
+        記下(f"1-B 第 4 段：create_agent（{{作業}}）", events)
+        """),
+        md("""
+        ### 👀 你看到了什麼
+
+        - 每一個「節點: model」是模型在想下一步；「節點: tools」是你的程式在執行它選的工具。一來一回就是 1-0 那個迴圈轉一圈。
+        - 最後一步的 `AIMessage` 沒有再叫工具，迴圈就結束了。
+        - 對照你的預測：它先用了哪一個？有沒有哪把工具根本沒用？下一段會看到這個順序每次可能不一樣。
+        - `invoke` 只給你終點；`stream`（`pretty_trace` 用的）把過程攤開。
+        """),
+        md("""
+        ---
+        ## 第 5 段：展開 create_agent，那個迴圈其實長這樣
+
+        > 📍 **對應簡報**：投影片 34「展開 create_agent」
+
+        `create_agent` 一行底下，就是 1-A 學過的三個零件：
+        一個問模型的節點 `ask_model`、一個跑工具的節點 `tools`、一條「有沒有要用工具」的 if（`tools_condition`），繞成一個圈。
+        程式在 `agent.py` 的 `建立_展開版_agent`。
+
+        | 元件 | 做什麼 |
+        | --- | --- |
+        | `@tool` | 函式 → 模型看得到的工具 |
+        | `bind_tools` | 工具說明書附在每次呼叫上 |
+        | `ask_model` | 問模型，回文字或 tool_calls |
+        | `ToolNode` | 讀 tool_calls、執行、包結果 |
+        | `tools_condition` | 內建路由：有 tool_calls → tools，沒有 → END |
+        | `add_edge("tools", "ask_model")` | 工具跑完回去問模型，形成循環 |
+
+        ### 🤔 預測題
+        流程圖上會有幾個節點？哪一條是條件邊？
+        """),
+        code(f"""
+        #@title ▶ 執行：自己用 LangGraph 組出同一個 agent
+        作業 = "變數打錯字"  #@param {作業選項}
+        {{PREAMBLE}}
+        import agent
+
+        展開版 = agent.建立_展開版_agent(model)
+        顯示流程圖(展開版)
+        events = agent.pretty_trace(展開版, agent.作業訊息(取得作業(作業)))
+        記下(f"1-B 第 5 段：展開版 agent（{{作業}}）", events)
+        """),
+        md("""
+        ### 👀 你看到了什麼
+
+        - 只有兩個節點：`ask_model` 和 `tools`。從 `ask_model` 出來的是條件邊（虛線）：要用工具就去 `tools`，不用就結束。
+        - `tools` 跑完一定回到 `ask_model`，這條往回指的箭頭就是迴圈。
+        - LangGraph 和 LangChain 不是對手，是上下層：`create_agent` 回傳的就是一個 LangGraph。
+        """),
+        md(f"""
+        ---
+        ## 第 6 段：同一段作業跑三次，順序不一樣
+
+        > 📍 **對應簡報**：投影片 36「同一段作業跑三次，順序不一樣」
+
+        這是 agent 和 workflow 最大的差別：**路線不是你畫的，是它當下決定的**。
+
+        ### 🤔 預測題（兩輪）
+        1. 先讓「system prompt 加一句」保持空白，執行。三次用工具的順序會一樣嗎？
+        2. 再把它改成 **一定要先讀題目要求**，執行。這次順序有沒有變？三次都一樣了嗎？
+        """),
+        code(f"""
+        #@title ▶ 執行：同一段作業跑三次，比較用工具的順序
+        作業 = "變數打錯字"  #@param {作業選項}
+        system_prompt_加一句 = ""  #@param ["", "一定要先讀題目要求", "一定要先執行作業看結果", "不要使用任何工具"] {{allow-input: true}}
+        {{PREAMBLE}}
+        import agent
+
+        system_prompt = agent.基本_system_prompt + system_prompt_加一句
+        print("system prompt：", system_prompt, "\\n")
+        小助教 = agent.建立_agent(model, system_prompt=system_prompt)
+
+        三次 = []
+        for i in range(3):
+            result = 小助教.invoke({{"messages": [{{"role": "user", "content": agent.作業訊息(取得作業(作業))}}]}})
+            順序 = agent.工具順序(result["messages"])
+            三次.append(順序)
+            print(f"========== 第 {{i + 1}} 次 ==========")
+            print("用工具的順序：", " → ".join(順序) or "（沒有用任何工具，直接評語）")
+            print(result["messages"][-1].text[:300])
+            print()
+
+        print("三次順序都一樣嗎？", "是" if all(x == 三次[0] for x in 三次) else "不一樣")
+        記下(f"1-B 第 6 段：跑三次（加一句：{{system_prompt_加一句 or '無'}}）", {{"三次的工具順序": 三次}})
+        """),
+        md("""
+        ### 👀 你看到了什麼
+
+        - 沒加那句時，三次的順序常常不同：有時先 `run_code`、有時先 `read_spec`，有時甚至沒跑程式就直接評語。
+          **這不是 bug，是 agent 的天性**：同一程式、同一作業，每次可能走不同路徑。
+        - 加了「一定要先讀題目要求」之後，第一步大多會變成 `read_spec`，但**不保證每次都聽話**：
+          寫在 prompt 裡的是「建議」，寫在流程圖裡的才是「一定」。
+        - 所以第 4 站要學：哪些步驟該鎖死在流程裡，哪些可以放手讓 AI 決定。
+        """),
+        md("""
+        ---
+        ## 第 7 段：它會繞圈：recursion limit
+
+        > 📍 **對應簡報**：投影片 37「它會繞圈：recursion limit」
+
+        這是講師示範：給 agent 一個**故意永遠失敗**的工具 `always_fail`，再叫它「一定要成功才停」。
+        我們在程式裡設 `recursion_limit=25`：超過 25 步，LangGraph 就強制停下來。
+        （舊版 LangGraph 預設就是 25；從 1.1 版起，不設的話上限是 10007 步，所以要自己設。）
+
+        ### 🤔 預測題
+        模型會呼叫 `always_fail` 幾次才被停下來？停下來時會看到什麼錯誤？
+        """),
+        code("""
+        #@title ▶ 執行：一個永遠失敗的工具，看 agent 被 recursion limit 停下來
+        {PREAMBLE}
+        from langchain.agents import create_agent
+        from langchain.tools import tool
+        from langgraph.errors import GraphRecursionError
+
+        @tool
+        def always_fail() -> str:
+            \"\"\"做一件很重要的事。失敗的話請再試一次，直到成功為止。\"\"\"
+            return "執行錯誤：RuntimeError: 還是不行，請再試一次"
+
+        繞圈agent = create_agent(
+            model, tools=[always_fail],
+            system_prompt="你的任務是呼叫 always_fail 直到它成功為止。不管失敗幾次都要再試，不要放棄，也不要用文字回答。",
+        )
+        次數 = 0
+        try:
+            for step, event in enumerate(繞圈agent.stream({"messages": [{"role": "user", "content": "開始吧"}]},
+                                                       config={"recursion_limit": 25}, stream_mode="updates"), start=1):
+                for node, update in event.items():
+                    for msg in (update or {}).get("messages", []):
+                        if getattr(msg, "tool_calls", None):
+                            次數 += 1
+                            print(f"--- 第 {step} 步 | 節點: {node} ---  模型決定呼叫 -> always_fail()")
+                        elif msg.type == "tool":
+                            print(f"--- 第 {step} 步 | 節點: {node} ---  [ToolMessage] {msg.text}")
+                        else:
+                            print(f"--- 第 {step} 步 | 節點: {node} ---  [AIMessage] {msg.text[:80]}")
+            print("\\n（這次模型自己放棄了，沒有撞到上限。再執行一次看看）")
+        except GraphRecursionError as e:
+            print(f"\\n🛑 GraphRecursionError：{str(e).splitlines()[0]}")
+        print(f"模型總共呼叫了 always_fail {次數} 次")
+        記下("1-B 第 7 段：recursion limit", {"呼叫次數": 次數})
+        """),
+        md("""
+        ### 👀 你看到了什麼
+
+        - 模型一直叫 `always_fail`，每一圈都在花 token，自己停不下來。
+        - 第 25 步時 LangGraph 丟出 `GraphRecursionError`，強制結束。這是今天第一個「**用程式限制 AI**」的例子。
+        - 1-0 的「最多 5 圈」、1-A 的「最多重試次數」、這裡的 `recursion_limit`，都是同一個想法：不能錯的事寫進程式。
+        - 簡報的下一站（第四站）就來談：哪些事該這樣鎖死、哪些可以放手。
+        """),
+        md("""
         ---
         ## 第 1 堂收尾
 
