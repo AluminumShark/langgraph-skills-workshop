@@ -1,6 +1,6 @@
 # 第 2 堂投影片大綱：Agent Skills 與 vibe coding
 
-共 33 張（另有課後自學的「補充：上雲端」8 張，見文末；HTML 版共 54 張）。設計原則：每張只帶一個新名詞；先看例子、再看規律、最後才給名字；表格最多三列，其餘放講義；每 15 分鐘一張「停一下」要學生在紙上寫答案。全堂新概念控制在 12 個以內。方括號數字對應文末參考來源。
+共 33 張，另加系統設計段新增的 2 張（25a「RAG 用哪一格」、31a「分工圖搬上雲端」）；另有課後自學的「補充：上雲端」8 張，見文末；HTML 版共 56 張。設計原則：每張只帶一個新名詞；先看例子、再看規律、最後才給名字；表格最多三列，其餘放講義；每 15 分鐘一張「停一下」要學生在紙上寫答案。全堂新概念控制在 12 個以內。方括號數字對應文末參考來源。
 
 ## 回顧與便利貼（0:00–0:08）
 
@@ -212,6 +212,17 @@ def check_naming(state):
 - **畫面**：分工圖中間「手冊」格亮起來
 - **常見錯放**：把 30 題全寫進 system prompt。每批一份作業，都要讓 AI 先讀 30 題。
 
+### 投影片 25a｜RAG 用哪一格呈現？（新增，HTML 第 34 張）
+
+- **畫面**：標題「RAG 用哪一格？查是 tool，插座是 MCP，Skill 教怎麼查」；一行定義；三個並排的框
+  - **Tool**：「查資料」這個動作本身，例如 `search_past_mistakes(query)` 回傳最像的幾筆歷屆作業錯誤。資料不多、只有自己用 → 本地 `@tool` 就夠
+  - **MCP**：知識庫、向量資料庫是別人的服務、要認證，或要給多個 agent 共用 → 同一個查詢工具改從 MCP 插座接進來（agent 用起來和本地 tool 一樣）
+  - **Skill**：不負責查。教 AI 什麼時候該查、用什麼關鍵字、查到之後怎麼引用（例：「先查這題的常見錯誤，只引用最相關的兩筆」）。資料少到能整份讀 → 直接放 `references/`，不需要 RAG（例：30 題的題目要求）
+  - 註腳一行：每一份作業都一定要先查 → 寫成流程裡固定的 `retrieve` 節點（程式）
+- **新名詞**：RAG（Retrieval-Augmented Generation）＝ 先查再答：從一大堆資料裡搜尋出最相關的幾段，放上桌給 AI 參考，再讓它回答
+- **重點**：RAG 不是新的抽屜：查 ＝ tool，插座 ＝ MCP，怎麼查 ＝ Skill
+- **講者**（約 2 分鐘）：上一張的 30 題放 references/，是因為資料少、看題號就知道翻哪份；上千筆歷屆錯誤、整學期講義就要先搜尋。固定的 RAG ＝ 流程裡放 retrieve 節點、每份一定查（像 2-B 放法 C）；agentic RAG ＝ 把搜尋做成 tool、agent 自己決定要不要查（像 1-B）。上雲端時向量資料放在資料庫（例如同一個 Postgres 加 pgvector），第 41 張的部署地圖會看到
+
 ### 投影片 26｜功能 4：檢查變數命名、執行作業看輸出
 
 - **講者問**：檢查命名，2-B 已經證明寫在文字裡會飄，所以是**腳本**，放手冊的 scripts/，包成工具給 agent 用。執行作業是「做」，是**工具**。
@@ -246,6 +257,19 @@ def check_naming(state):
 
 - **講者**：回頭看便利貼。「抓作業 agent」和「寄信 agent」根本不是 agent，是插座上的工具；真正需要判斷、需要 agent 的只有批改這一步，而且它裡面是一本手冊、一個工具箱、一個腳本。你們剛才每個功能都在問同樣幾個問題。
 
+### 投影片 31a｜分工圖搬上雲端：每一格住在哪裡（新增，HTML 第 41 張）
+
+- **畫面**：一張部署地圖
+  - 使用者：學生、幹部（網頁、LINE、GitHub）→ 用網址連到容器
+  - 你的容器（Cloud Run 或 LangSmith Deployment）：API ＋ 外層流程（程式）＋ 回饋 agent ＋ 本地 tool（`check_naming`、`read_spec`）＋ `skills/` 和 `scripts/`（跟映像一起出貨）
+  - 資料庫（Postgres）：checkpointer（每個 `thread_id` 的 State、等人按確認的信）＋ 向量資料（RAG）
+  - 保管箱（Secret Manager）：模型 API key、OAuth token，部署時才變成環境變數
+  - 別人的服務（透過網路呼叫）：模型 API、遠端 MCP server（抓 GitHub 作業、寄信）、沙箱（`run_code` 跑學生程式）
+  - 旁邊還有：任務佇列（200 份排隊）、Trace／Eval 儀表板
+- **重點**：程式、手冊、腳本跟著容器走；會變的資料進資料庫；鑰匙進保管箱；別人的能力透過網路接進來
+- **講者**（約 2 分鐘，時間不夠可以跳過）：細節在課後自學的「補充：上雲端」（HTML 第 47–54 張）
+- **互動／課後練習**：notebook 2-E 練習 1（把小助教包成 API 服務）、練習 4（產生 Dockerfile 與 `langgraph.json`）
+
 ### 投影片 32｜你剛才問的問題，整理起來就是這六個
 
 1. 這件事是「做」還是「知道怎麼做」？做 → 工具
@@ -276,6 +300,7 @@ def check_naming(state):
 - **講師 2 分鐘示範**：Claude Code 裡的手冊放在 `.claude/skills/`，今天寫的那本原封不動放進去就能用 \[1\]；hook 是每次都會執行的小程式，能擋下危險指令
 - **課後作業**：把工作坊的設計單寫成一頁；選做：用前面的 notebook 把其中一格做出來
 - **畫面下方**：回饋表 QR code、講者聯絡方式
+- **畫面右上角**：課程 repo 的 QR code（github.com/AluminumShark/langgraph-skills-workshop），HTML 第 44 張；參考來源頁（HTML 第 55 張）右上角也有同一個
 
 ## 講義補充（課堂上不講，印給學生）
 
@@ -297,6 +322,8 @@ def check_naming(state):
 
 **腳本的四個原則**：一個腳本只做一件事；輸出要讓 AI 看得懂（一行結論，不要整段錯誤訊息）；不放帳號密碼；看到 AI 一直重寫同一段邏輯才加腳本，不要因為有 scripts/ 資料夾就硬塞 \[3\]。
 
+**RAG 用哪一格（投影片 25a 的延伸）**：RAG 不是新的抽屜。查是一個動作 → tool；資料庫在外面、要認證或多個 agent 共用 → 從 MCP 接；什麼時候查、怎麼引用 → Skill；資料少到能整份讀 → references/，不需要 RAG；每份都一定要查 → 流程裡固定的 retrieve 節點。
+
 **漸進式揭露的實際數字**：名片約 100 token（大約一則 LINE 訊息），手冊內文建議 5,000 token 以內（大約一篇作文），附錄需要才讀 \[2\]。
 
 **開第二個 agent 的第三個理由**：工具超過 15 到 20 個時，AI 開始選錯工具，把工具分給不同的 agent 會比較準 \[6\]。
@@ -309,16 +336,16 @@ def check_naming(state):
 
 **兩份資安研究的數字**：Snyk 2026 年 2 月掃 3,984 份，36.82% 至少一個安全問題、13.4% 嚴重 \[4\]；Liu 等 2026 年 1 月掃 31,132 份，26.1% 至少一個漏洞、5.2% 疑似惡意，附腳本的 Skill 出問題機率是純文字的 2.12 倍 \[5\]。
 
-## 補充：多 agent 系統怎麼部署到雲端（課後自學，HTML 第 45–52 張）
+## 補充：多 agent 系統怎麼部署到雲端（課後自學，HTML 第 47–54 張）
 
-課堂上不講，接在「講義裡還有」之後，給想把作業小助教真的放上線的同學。每張只帶一個新名詞：容器、`langgraph.json`、遠端 MCP、`Send`、`interrupt`。對應的課後選做 notebook：[`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)（四個練習都在免費 Colab 跑，不需要真的部署）。方括號 \[11\]–\[18\] 對應文末參考來源，HTML 版放在第 54 張「參考來源（續）」。
+課堂上不講，接在「講義裡還有」之後，給想把作業小助教真的放上線的同學。每張只帶一個新名詞：容器、`langgraph.json`、遠端 MCP、`Send`、`interrupt`。對應的課後選做 notebook：[`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)（四個練習都在免費 Colab 跑，不需要真的部署）。方括號 \[11\]–\[18\] 對應文末參考來源，HTML 版放在第 56 張「參考來源（續）」。
 
-### 投影片 35｜補充：上雲端（站名頁，HTML 第 45 張）
+### 投影片 35｜補充：上雲端（站名頁，HTML 第 47 張）
 
 - **畫面**：站名「上雲端：把多 agent 的作業小助教，從 Colab 搬到雲端」；這一站要回答：離開 Colab 要換掉哪三樣東西？程式、手冊、腳本怎麼打包、放到哪一朵雲？200 個子 agent、寄信、資安，上線後怎麼管？
 - **互動／課後練習**：notebook 2-E（四個練習的總覽）
 
-### 投影片 36｜離開 Colab：三樣東西要換掉（HTML 第 46 張）
+### 投影片 36｜離開 Colab：三樣東西要換掉（HTML 第 48 張）
 
 - **畫面**：三列表格（在 Colab ／ 上雲端）
   - 模型：`google.colab.ai` → 正式 API key，放進 Secret Manager，程式從環境變數讀
@@ -327,13 +354,13 @@ def check_naming(state):
 - **新名詞**：容器（container）＝ 把程式和它需要的一切裝進同一個箱子，搬到哪台機器都一樣能跑
 - **互動／課後練習**：notebook 2-E 練習 4，把金鑰搬進 Colab 的「密鑰」（Secret Manager 的縮小版）
 
-### 投影片 37｜打包：langgraph.json 是出貨單（HTML 第 47 張）
+### 投影片 37｜打包：langgraph.json 是出貨單（HTML 第 49 張）
 
 - **畫面**：左邊專案樹（`dual_core.py`、`deploy/app_graph.py`、`tools/`、`skills/`、`requirements.txt`、`.env`、`langgraph.json`）；右邊 `langgraph.json`（`dependencies: ["."]`、`graphs: {"review_bot": "./deploy/app_graph.py:graph"}`、`env`）與兩個指令 `langgraph dev`、`langgraph build -t review-bot` \[12\]
 - **講者**：`"."` 代表整個資料夾一起出貨，`skills/` 也會跟著進去，手冊和程式永遠同一個版本。先在本機用 `langgraph dev` 跑通，再決定搬去哪
 - **互動／課後練習**：notebook 2-E 練習 1（在 Colab 把雙核小助教包成 API 服務）、練習 4（產生 Dockerfile 與 `langgraph.json`）
 
-### 投影片 38｜放到哪一朵雲：三種做法（HTML 第 48 張）
+### 投影片 38｜放到哪一朵雲：三種做法（HTML 第 50 張）
 
 | 做法 | 例子 | 你要自己管的 | 適合 |
 | --- | --- | --- | --- |
@@ -344,7 +371,7 @@ def check_naming(state):
 - **講者**：三種都跑同一份 graph，差別只在「你想自己管多少」。名稱是 2026 年 11 月查證的：LangGraph Platform 在 2025 年 10 月改名 LangSmith Deployment（需 Plus 以上方案）；Google 在 2026 年 4 月把 Vertex AI 改名 Gemini Enterprise Agent Platform、Agent Engine 改叫 Agent Runtime（LangGraph 範本仍是 preview）；AWS Bedrock AgentCore 2025 年 10 月 GA
 - **互動／課後練習**：notebook 2-E 練習 1 包出來的 API 服務，就是這三種做法裡真正在跑的那一層
 
-### 投影片 39｜五個抽屜搬上雲（HTML 第 49 張）
+### 投影片 39｜五個抽屜搬上雲（HTML 第 51 張）
 
 - **畫面**：五列對照表（抽屜／在 Colab／上雲端）
   - 程式：容器裡的 API，一個 `thread_id` 一張訂單紙
@@ -354,21 +381,21 @@ def check_naming(state):
   - 子 agent：用 `Send` 一次開 200 份，並設並行上限
 - **新名詞**：遠端 MCP ＝ 插座不在你的機器上，而是別人服務上的一個網址；金鑰由 OAuth 換來，不寫進程式
 
-### 投影片 40｜200 份同時批：Send（HTML 第 50 張）
+### 投影片 40｜200 份同時批：Send（HTML 第 52 張）
 
 - **畫面**：`分派(state)` 回傳 `[Send("批一份", {"code": c}) for c in state["作業們"]]`、`add_conditional_edges("抓作業", 分派, ["批一份"])`、`config={"max_concurrency": 20}`；結果用 `Annotated[list, operator.add]` 收回來 \[14\]
-- **講者**：每份一張乾淨的桌子（第 35 張的災難不會發生）；要設並行上限，模型 API 每分鐘有上限；先算錢，多 agent 約 3–10 倍 token \[6\]
+- **講者**：每份一張乾淨的桌子（第 36 張的災難不會發生）；要設並行上限，模型 API 每分鐘有上限；先算錢，多 agent 約 3–10 倍 token \[6\]
 - **新名詞**：`Send` ＝ 在流程裡說「這個節點，照這份清單一份開一個」
 - **互動／課後練習**：notebook 2-E 練習 2，用 Send 平行批 5 份作業，數模型呼叫次數、估 token
 
-### 投影片 41｜寄信前一定停下來：interrupt（HTML 第 51 張）
+### 投影片 41｜寄信前一定停下來：interrupt（HTML 第 53 張）
 
 - **畫面**：`寄信(state)` 節點裡 `答案 = interrupt({...})`，確認後 `graph.invoke(Command(resume="寄"), config={"configurable": {"thread_id": "小明-期中"}})`
-- **講者**：`interrupt` 把 State 存進 checkpointer 然後停住，等多久都可以；所以雲端一定要用 Postgres 這種不會忘記的 checkpointer \[15\]。第 38 張「寄之前一定要有人按確認」在這裡從一句話變成一行程式
+- **講者**：`interrupt` 把 State 存進 checkpointer 然後停住，等多久都可以；所以雲端一定要用 Postgres 這種不會忘記的 checkpointer \[15\]。第 39 張「寄之前一定要有人按確認」在這裡從一句話變成一行程式
 - **新名詞**：`interrupt` ＝ 流程走到這裡先停下來，等人回覆再繼續
 - **互動／課後練習**：notebook 2-E 練習 3，在假的 `send_email` 前面放 `interrupt()`，再用 `Command(resume=…)` 接著跑
 
-### 投影片 42｜上線之後：看得見、關得住（HTML 第 52 張）
+### 投影片 42｜上線之後：看得見、關得住（HTML 第 54 張）
 
 - **畫面**：左「看得見」：Trace、Eval 進 CI（第 26–27 張那五個 case 每次改動都自動跑）、成本；右「關得住」五個勾選框：工具最小權限、`run_code` 在沙箱跑、第三方 Skill 照 2-C 三個習慣審過並鎖版本、金鑰只放 Secret Manager、不可逆動作前一定有 `interrupt`
 - **講者**：上雲端不是換個地方跑，是把 harness 補完整：每一步看得見，每一個權限關得住

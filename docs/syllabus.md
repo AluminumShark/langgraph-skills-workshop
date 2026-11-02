@@ -156,7 +156,7 @@ for step in agent.stream({"messages": [("user", 作業)]}, stream_mode="values")
 | 0:48–0:58 | 中場休息 |  |  |
 | 0:58–1:06 | 2-C：別人的手冊能直接用嗎 | 新名詞只有 prompt injection。藏指令的手冊實驗（假金鑰）；一個數字（每 3–4 份有 1 份有問題）、三個習慣。細部數據放講義。 | 執行，找出藏指令的那一行 |
 | 1:06–1:15 | 2-D：雙核 demo | 不教新名詞。講師跑給大家看：外層 1-A 流程鎖順序，give\_feedback 裡面是小 agent，用 2-A 的手冊和 2-B 的腳本。skill\_loader 和腳本包成工具各一句話帶過。checkpointer 只提一句，放講義。 | 看 |
-| 1:15–1:50 | 系統設計：邊拆邊教 | 新名詞：子 agent、驗證 agent（MCP 為上週複習）。回到便利貼，一個功能一張投影片放進格子：抓作業→MCP；先檢語法→程式；語氣與 30 題→手冊；命名檢查→腳本；200 份→子 agent（用「桌子堆滿 149 份」的災難故事引出）；驗證→驗證 agent（溫和與嚴格不該是同一人）；不要三人接力；寄信→MCP + 人工確認。分工圖最後才長完整，六問最後才總結。 | 跟著填設計單；兩次停一下在紙上作答 |
+| 1:15–1:50 | 系統設計：邊拆邊教 | 新名詞：子 agent、驗證 agent（MCP 為上週複習）。回到便利貼，一個功能一張投影片放進格子：抓作業→MCP；先檢語法→程式；語氣與 30 題→手冊；命名檢查→腳本；200 份→子 agent（用「桌子堆滿 149 份」的災難故事引出）；驗證→驗證 agent（溫和與嚴格不該是同一人）；不要三人接力；寄信→MCP + 人工確認。分工圖最後才長完整，六問最後才總結。新增兩張、約多 4 分鐘：「RAG 用哪一格」（tool／MCP／Skill）接在 30 題 references/ 之後；「分工圖搬上雲端」部署地圖接在分工圖之後，時間不夠可跳過（課後補充會再講）。 | 跟著填設計單；兩次停一下在紙上作答 |
 | 1:50–2:00 | 工作坊 + 收束 | 兩人一組抽需求卡用六問填設計單；講師抽一組只問「這裡為什麼需要 agent」。收束三句話；講師 2 分鐘示範 Claude Code 的 skills 資料夾與 hook。 | 設計、說明；填回饋 |
 
 **三格判斷表（0:35 段落用，這是本課程最重要的一張表）：**
@@ -253,6 +253,20 @@ for step in agent.stream({"messages": [("user", 作業)]}, stream_mode="values")
 
 2026 年的主流做法是兩者一起用：MCP 負責連線，Skill 負責教 AI 怎麼用那些連線。甚至出現「用 Skill 包 MCP」的模式：一個 MCP server 有 80 個 tool 會把桌子塞爆，改寫成一份 Skill，描述「要查作業時用哪三個 tool、順序是什麼」，桌子只放一張書背。
 
+### RAG 用哪一格呈現（第 2 堂投影片 34）
+
+RAG（Retrieval-Augmented Generation，先查再答）：先從一大堆資料裡搜尋出最相關的幾段，放上桌給 AI 參考，再讓它回答。它不是新的抽屜，而是拆進現有的三格：
+
+| 抽屜 | RAG 的哪一部分 | 作業小助教的例子 |
+| --- | --- | --- |
+| Tool | 「查資料」這個動作本身；資料不多、只有自己用 → 本地 `@tool` 就夠 | `search_past_mistakes(query)` 回傳最像的幾筆歷屆作業錯誤 |
+| MCP | 知識庫、向量資料庫是別人的服務、要認證，或要給多個 agent 共用 → 同一個查詢工具改從 MCP 插座接（agent 用起來和本地 tool 一樣） | 全系共用的歷屆作業資料庫 |
+| Skill | 不負責查；教 AI 什麼時候該查、用什麼關鍵字、查到之後怎麼引用。資料少到能整份讀時直接放 `references/`，根本不需要 RAG | 「先查這題的常見錯誤，只引用最相關的兩筆」；30 題的題目要求放 references/ |
+
+每一份都一定要先查 → 寫成流程裡固定的 retrieve 節點（程式），這叫固定的 RAG；把搜尋做成 tool、讓 agent 自己決定要不要查，叫 agentic RAG。上雲端時向量資料放在資料庫裡（例如和 checkpointer 同一個 Postgres 加 pgvector），見下面的部署地圖。
+
+一句話：**RAG 不是新的抽屜：查 ＝ tool，插座 ＝ MCP，怎麼查 ＝ Skill。**
+
 ### 何時需要第二個 agent
 
 Anthropic 2026 年 1 月的指引（出處見參考資料）：
@@ -283,6 +297,7 @@ Anthropic 2026 年 1 月的指引（出處見參考資料）：
 | 驗證回饋沒有亂講行號 | 5 子 agent（驗證） | 問 6：可獨立驗證 | 讓寫回饋的 agent 自己驗，容易自己放過自己 |
 | 寄信給學生 | 3 MCP + hook | 問 2 + 稽核 | 寄信不可逆，hook 強制人工確認 |
 | 回饋一定要有兩段 | 1 程式（驗證節點） | 問 3 | 格式能用程式檢查，不必花 token 讓 AI 判斷 |
+| 從上千筆歷屆作業找相似錯誤（RAG） | 2 Tool（查詢）；資料庫在外面或要共用 → 3 MCP；怎麼查寫進 4 Skill | 問 1 ＋ 問 2 | 太多了不能整份放 references/；Skill 自己不能查，只能教怎麼查 |
 
 **三個常見的錯放：**
 
@@ -303,7 +318,19 @@ Anthropic 2026 年 1 月的指引（出處見參考資料）：
 
 ### 補充：多 agent 系統怎麼部署到雲端（課後自學）
 
-第 2 堂簡報第 45–52 張（參考來源在第 54 張），課堂上不講，給想把作業小助教真的放上線的同學。內容依序是：離開 Colab 要換掉的三樣東西（模型金鑰改放 Secret Manager、檔案改裝進容器、checkpointer 改用 Postgres）；用 `langgraph.json` 打包、`langgraph dev` 本機跑通；三種上雲做法（LangSmith Deployment、自己的容器如 Cloud Run、Google Agent Runtime 或 AWS Bedrock AgentCore）；五個抽屜搬上雲後各變成什麼（含遠端 MCP）；用 `Send` 平行批 200 份並設並行上限、先算成本；寄信前用 `interrupt()` 人工確認；上線後的 trace、eval 進 CI 與權限清單。對應的課後選做 notebook 是 [`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)，四個練習都在免費 Colab 跑，不需要真的部署。
+第 2 堂簡報第 47–54 張（參考來源在第 55–56 張），課堂上不講，給想把作業小助教真的放上線的同學。內容依序是：離開 Colab 要換掉的三樣東西（模型金鑰改放 Secret Manager、檔案改裝進容器、checkpointer 改用 Postgres）；用 `langgraph.json` 打包、`langgraph dev` 本機跑通；三種上雲做法（LangSmith Deployment、自己的容器如 Cloud Run、Google Agent Runtime 或 AWS Bedrock AgentCore）；五個抽屜搬上雲後各變成什麼（含遠端 MCP）；用 `Send` 平行批 200 份並設並行上限、先算成本；寄信前用 `interrupt()` 人工確認；上線後的 trace、eval 進 CI 與權限清單。對應的課後選做 notebook 是 [`2-E_deploy.ipynb`](https://colab.research.google.com/github/AluminumShark/langgraph-skills-workshop/blob/main/notebooks/2-E_deploy.ipynb)，四個練習都在免費 Colab 跑，不需要真的部署。
+
+**部署地圖（課堂上放在第 2 堂投影片 41，約 2 分鐘，時間不夠可跳過）**：把分工圖搬上雲端，每一格住在不同的地方。
+
+| 住在哪裡 | 放什麼 |
+| --- | --- |
+| 你的容器（Cloud Run 或 LangSmith Deployment） | API、外層流程（程式）、回饋 agent、本地 tool、`skills/` 與 `scripts/`（跟映像一起出貨） |
+| 資料庫（Postgres） | checkpointer（每個 `thread_id` 的 State、等人按確認的信）、RAG 的向量資料 |
+| 保管箱（Secret Manager） | 模型 API key、OAuth token（部署時才變成環境變數） |
+| 別人的服務（透過網路呼叫） | 模型 API、遠端 MCP server（抓 GitHub 作業、寄信）、沙箱（`run_code` 跑學生程式） |
+| 旁邊 | 任務佇列（200 份排隊）、Trace／Eval 儀表板 |
+
+一句話：程式、手冊、腳本跟著容器走；會變的資料進資料庫；鑰匙進保管箱；別人的能力透過網路接進來。
 
 ## 講師準備的 Colab notebook
 
@@ -318,7 +345,7 @@ Anthropic 2026 年 1 月的指引（出處見參考資料）：
 | `2-B_code_text_script.ipynb` | 第 2 堂 0:35 | 不用改，執行三個版本並比對 |
 | `2-C_security.ipynb` | 第 2 堂 1:05 | 不用改，找出藏指令的行 |
 | `2-D_dual_core.ipynb` | 第 2 堂 1:25 | thread\_id |
-| `2-E_deploy.ipynb`（課後選做） | 第 2 堂補充：上雲端 | 選做四個練習：API 服務、平行批改、寄信前確認、上線前檢查 |
+| `2-E_deploy.ipynb`（課後選做） | 第 2 堂補充：上雲端（投影片 47–54） | 選做四個練習：API 服務、平行批改、寄信前確認、上線前檢查 |
 
 Notebook 執行後在 `/content/review-bot/` 產生的檔案：
 
