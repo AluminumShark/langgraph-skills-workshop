@@ -50,6 +50,14 @@ def run(path: Path) -> tuple[bool, str]:
         if cell.cell_type == "code":
             src = re.sub(r"(?<![\w.])/content(?=[/\"'\s]|$)", content, cell.source)
             cell.source = _override(src, overrides)
+    # 模擬學生先按了後面的格子才跑「0. 環境設定」：Python 會先記住「這個資料夾不存在」
+    # （兩種寫法的路徑都塞：Windows 上 str(Path(...)) 是反斜線，和 notebook 字面上的 / 是不同的 key）
+    nb.cells.insert(0, nbformat.v4.new_code_cell(
+        "import sys\nfrom pathlib import Path\n"
+        f'for p in ("{content}/review-bot", str(Path("{content}/review-bot"))):\n'
+        "    sys.path.insert(0, p)\n"
+        "try:\n    import workshop\nexcept ImportError:\n    pass"
+    ))
     (work / "content").mkdir()
     env_backup = dict(os.environ)
     os.environ.update({

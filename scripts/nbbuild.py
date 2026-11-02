@@ -27,7 +27,7 @@ PACKAGES = [
 ]
 
 # 每一段 run cell 的開頭：重新連上模型（斷線、跑錯都能從這裡重來）
-PREAMBLE = f'''import sys; sys.path.insert(0, "{COLAB_RB}")
+PREAMBLE = f'''import sys, importlib; sys.path.insert(0, "{COLAB_RB}"); importlib.invalidate_caches()
 try:
     from workshop import *   # 準備、記下…（「0. 環境設定」寫好的小工具）
 except ImportError:
@@ -110,6 +110,9 @@ _檔案 = {{
 for rel, content in _檔案.items():
     (RB / rel).write_text(content, encoding="utf-8")
 sys.path.insert(0, str(RB))
+# 剛寫好的檔案要讓 Python 重新找一次（如果之前先跑過別的格子，Python 會記得「這個資料夾不存在」）
+import importlib
+importlib.invalidate_caches()
 
 # 3. 記住模型來源（不會存 API key），測試連線
 import llm
