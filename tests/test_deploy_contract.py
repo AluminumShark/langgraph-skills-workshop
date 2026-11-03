@@ -22,6 +22,29 @@ class VerificationContractTest(unittest.TestCase):
         self.assertFalse(multi_agent.驗證(model, "print(1)", "優點：清楚。\n改進：第 99 行需要修改。")["通過"])
 
 
+class SendDecisionTest(unittest.IsolatedAsyncioTestCase):
+    async def test_cancel_ends_at_confirmation_without_sending(self):
+        from langgraph.checkpoint.memory import InMemorySaver
+        from langgraph.types import Command
+
+        def 假工具(回傳):
+            return SimpleNamespace(ainvoke=AsyncMock(return_value=回傳))
+        tools = {"list_homework": 假工具('[{"學生": "小明", "email": "ming@example.com"}]'),
+                 "get_homework": 假工具("print('hi'"),   # 語法錯：程式直接回覆，不呼叫模型
+                 "send_email": 假工具("寄出")}
+        with patch.object(multi_agent, "取得MCP工具", AsyncMock(return_value=tools)):
+            graph = multi_agent.建立多agent小助教(SimpleNamespace(), mcp設定={}, checkpointer=InMemorySaver())
+            config = {"configurable": {"thread_id": "cancel"}}
+            await graph.ainvoke({"結果們": []}, config)
+            走過的站 = [站 async for event in graph.astream(Command(resume="都不要寄"), config, stream_mode="updates")
+                     for 站 in event]
+            snapshot = await graph.aget_state(config)
+        self.assertEqual(走過的站, ["寄信前確認"])
+        self.assertEqual(snapshot.next, ())
+        self.assertEqual(snapshot.values["寄件紀錄"], ["沒有寄出任何信（決定：都不要寄）"])
+        tools["send_email"].ainvoke.assert_not_awaited()
+
+
 class ApiContractTest(unittest.IsolatedAsyncioTestCase):
     async def test_existing_thread_does_not_restart(self):
         graph = SimpleNamespace(aget_state=AsyncMock(return_value=SimpleNamespace(values={"結果們": [1]})),

@@ -1,15 +1,15 @@
 """2-E 練習 2：把第 2 堂的整張分工圖在 Colab 跑一次（多 agent ＋ MCP）。
 
-START → 抓作業 ─Send×N→ 批一份 → 寄信前確認 → 寄信 → END
-         (MCP)             │                  (interrupt)  (MCP)
-                           └ 程式檢查語法 → 批改子 agent（手冊＋腳本＋run_code）→ 驗證 agent
+START → 抓作業 ─Send×N→ 批一份 → 寄信前確認 ─要寄→ 寄信 → END
+         (MCP)             │          (interrupt)  └都不要寄→ END   (MCP)
+                           └ 程式檢查語法 → 批改 agent（手冊＋腳本＋run_code）→ 驗證 agent
 
-對照分工圖中可以組合的五種角色：
-- 程式：外層流程的順序、語法檢查、「驗證不過就重寫一次」
+對照分工圖中可以組合的五種角色（本版是簡化版：沒有題目附件與 read_spec）：
+- 程式：外層流程的順序、語法檢查、「驗證不過就重寫一次」、選「都不要寄」就直接結束
 - Tool：check_naming（手冊附的腳本）、run_code
 - MCP ：作業倉庫的 list_homework / get_homework / send_email（工具住在另一個程式裡）
-- Skill：friendly-feedback 手冊，當批改子 agent 的 system prompt
-- 子 agent：每份作業一個批改子 agent（一張乾淨的桌子）＋ 一個職責獨立的驗證 agent
+- Skill：friendly-feedback 手冊，當批改 agent 的 system prompt
+- agent：同一套批改 agent 逐份處理（Send 分派，每份一張乾淨的桌子）＋ 一個職責獨立的驗證 agent
 """
 
 import json
@@ -83,7 +83,7 @@ class 一份State(TypedDict):
 
 
 def 驗證(model, code: str, feedback: str) -> dict:
-    # 程式能判斷的，先用程式檢查（不花 token）
+    # 程式能判斷的，先用程式檢查（這幾項不花 token）；稽核員每份都會再呼叫一次模型
     問題 = []
     if "優點" not in feedback or "改進" not in feedback:
         問題.append("少了「優點」或「改進」段落")
@@ -163,7 +163,13 @@ def 建立多agent小助教(model, mcp設定: dict | None = None, checkpointer=N
         清單 = [{"學生": r["學生"], "email": r["email"], "驗證通過": r["驗證"]["通過"],
                 "回饋": r["feedback"]} for r in state["結果們"]]
         決定 = interrupt({"要寄出的信": 清單, "選項": 寄信選項})
+        if 決定 == "都不要寄":
+            return {"決定": 決定, "寄件紀錄": ["沒有寄出任何信（決定：都不要寄）"]}
         return {"決定": 決定}
+
+    def 要不要寄(state: 總State) -> str:
+        # 選「都不要寄」就直接結束，不進寄信節點
+        return END if state.get("決定") == "都不要寄" else "寄信"
 
     async def 寄信(state: 總State) -> dict:
         要寄 = [r for r in state["結果們"]
@@ -185,7 +191,7 @@ def 建立多agent小助教(model, mcp設定: dict | None = None, checkpointer=N
     builder.add_edge(START, "抓作業")
     builder.add_conditional_edges("抓作業", 分派, ["批一份"])
     builder.add_edge("批一份", "寄信前確認")
-    builder.add_edge("寄信前確認", "寄信")
+    builder.add_conditional_edges("寄信前確認", 要不要寄, ["寄信", END])
     builder.add_edge("寄信", END)
     return builder.compile(checkpointer=checkpointer)
 
