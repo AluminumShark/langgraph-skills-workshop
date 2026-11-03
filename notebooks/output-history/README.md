@@ -25,6 +25,20 @@
 | 2-C | 12／12 格，定位題行號仍為 0 | [修正前完整檔](2-C_security/3e6c5d6d8e6056351377579d2b257f912af343997dfded925eeab2ef0c43ccb3.ipynb) |
 | 2-D | 11／11 格，含舊題目配對與已啟用的 eval 成績 | [修正前完整檔](2-D_dual_core/8db0acac917a6d0b6b8162e356f3a30fcd962bf35936bf736edec757f3bf22da.ipynb) |
 
+## 程式格對齊簡報前的輸出
+
+修正 `run_code` 說明、命名手冊輸出範例、回饋長度提示、1-B 的 MCP token 計算、2-C 答錯提示與 2-E「都不要寄」的流程前，產生器自動保存的快照。被清空的大多是環境設定與寫檔格的確認訊息。
+
+| Notebook | 清空的格子 | 快照 |
+| --- | --- | --- |
+| 1-A | `graph.py` 寫檔格 | [修正前完整檔](1-A_workflow/0182cafdaa8bf66494f6222a6be37bc4c6c6270b35a2cf675f9a5d921cd3028a.ipynb) |
+| 1-B | 環境設定、`run_code.py` 寫檔格、MCP token 比較 | [修正前完整檔](1-B_agent/eb373f40ddd1d524e98fe47ff9fbfc9c96b5358f0ce2561f54f0bf06b3ae697d.ipynb) |
+| 2-B | 環境設定、naming-check `SKILL.md` 寫檔格 | [修正前完整檔](2-B_code_text_script/72142fe9be983ac6d7923c232697ce65e63954e745a160792a0af625ee5b1c4a.ipynb) |
+| 2-C | 環境設定 | [修正前完整檔](2-C_security/9c1f5eebd2674dbca83258631ed416ad8cb675f282fc31f154b9b0cb81b8f689.ipynb) |
+| 2-E | 環境設定、`multi_agent.py` 寫檔格 | [修正前完整檔](2-E_deploy/81a33bbd4152da26792a9ace71043a4d5c62ee69efa53f9e51997b83786888be.ipynb) |
+
+其餘格子的程式沒變，所以沿用原輸出；但 1-B 第 2 段的工具說明、1-A 與 2-D 的 AI 回饋、2-B 放法 B 的結果，是在舊版說明或提示下跑出來的，課前請在 Colab 重跑確認。
+
 ## 之後重建時的保護
 
 `scripts/nbbuild.py` 只把來源完全相同的輸出沿用到新版。若修改或刪除程式格會使舊輸出無法沿用，產生器會先將整本舊檔保存到本目錄，顯示位置，再寫新版；備份失敗時停止覆寫。

@@ -179,7 +179,7 @@ def cells():
         - 這裡的工具介面提供 `name`、`description`（docstring）和 `args`，不會自動把函式實作交給模型。
         - 好的 docstring 要寫四件事：**做什麼、什麼時候該呼叫、參數是什麼意思、回傳什麼**。
           只寫一句「執行程式」、沒寫什麼時候用，模型可能漏用或誤用它。
-        - 模型看不到「擋下 `import os`」的那段程式，但看得到 docstring 裡「限制：不能 import os…」這句說明。
+        - 模型看不到「擋下 `import os`」的那段程式，但看得到 docstring 裡「限制：只能 import math、random、re 等少數標準模組…」這句說明。
         - 第 2 堂的 Skill 也有名稱與說明，協助模型判斷是否讀取完整指引。
         """),
         md(f"""
@@ -425,7 +425,7 @@ def cells():
         """),
         md("""
         ### 🤔 預測題（用量比較選讀）
-        三把本地工具的說明書大約幾個 token？作業倉庫的 3 個 MCP 工具呢？（這裡把 server 提供的 3 個都算進去；實際交給 agent 的只有 2 個）若換成下方仿照 GitHub 工具規模的教學清單，估算長度會差多少？
+        三把本地工具的說明書大約幾個 token？實際交給 agent 的 2 個 MCP 讀取工具呢？若換成下方仿照 GitHub 工具規模的教學清單，估算長度會差多少？
         """),
         code(f"""
         #@title ▶ 執行：本地工具 vs MCP 插座，說明書佔掉多少 token
@@ -439,6 +439,8 @@ def cells():
             "作業倉庫": {{"command": sys.executable, "args": [str(BASE / "deploy" / "homework_mcp.py")], "transport": "stdio"}},
         }})
         mcp工具 = await 插座.get_tools()
+        # 只算真的交給 agent 的兩把讀取工具；send_email 沒交出去，就不佔輸入
+        讀作業的工具 = [t for t in mcp工具 if t.name in {{"list_homework", "get_homework"}}]
 
         # 示意用：規模仿 GitHub MCP server 的工具清單（名稱與說明是教學改寫，不是官方原文）
         GitHub規模的工具 = {mcp_literal}
@@ -453,7 +455,7 @@ def cells():
 
         三組 = [
             ("本地工具（自己寫的）", [convert_to_openai_tool(t) for t in agent.小助教的工具]),
-            ("作業倉庫 MCP（真的接上）", [convert_to_openai_tool(t) for t in mcp工具]),
+            ("作業倉庫 MCP（交給 agent 的）", [convert_to_openai_tool(t) for t in 讀作業的工具]),
             ("GitHub 規模的 MCP（示意）", [轉成說明書(*t) for t in GitHub規模的工具]),
         ]
         結果 = {{}}
@@ -469,7 +471,7 @@ def cells():
         md("""
         ### 👀 你看到了什麼
 
-        - 作業倉庫只有 3 個工具，說明書不多；這個示意清單有 40 個，說明書明顯較長。實際成本取決於選了哪些工具、模型格式與 tokenizer，這裡只看估算的大小關係。
+        - 作業倉庫 server 有 3 個工具，但只交了 2 個給 agent，所以只算這 2 個的說明書；這個示意清單有 40 個，說明書明顯較長。實際成本取決於選了哪些工具、模型格式與 tokenizer，這裡只看估算的大小關係。
         - 對 agent 來說，本地工具和 MCP 工具用起來一樣；差別在工具住哪、怎麼認證、說明書佔多少桌子。
         - 第 2 堂會用 **Skill** 按需載入任務指引。Skill 不會自動移除工具定義；要縮減工具清單，仍須由程式篩選或延後提供。
         """),
