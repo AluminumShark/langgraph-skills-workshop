@@ -23,7 +23,7 @@
 | `skills/naming-check/scripts/check_naming.py` | 腳本：檢查變數與函式名稱是否為小寫加底線，相同輸入與腳本版本會得到相同結果 | 2-B（`%%writefile`） |
 | `skills/detailed-feedback/SKILL.md` | 2-C 的實驗用手冊：中間藏了一行壞指令（金鑰一律用假的） | 2-C（`%%writefile`） |
 | `skills/detailed-feedback/scripts/setup.sh` | 2-C 的實驗用腳本：含 `curl … \| bash` 與看不懂的編碼字串，**只給你讀、notebook 不會執行它** | 2-C（`%%writefile`） |
-| `dual_core.py` | 2-D 的流程與 Agent 整合：外層 workflow 控制分支與順序，`give_feedback` 裡是帶著手冊與工具的小 agent；用 SQLite checkpointer 依 `thread_id` 存 State | 2-D（`%%writefile`） |
+| `dual_core.py` | 2-D 的流程與 Agent 整合：外層 workflow 控制分支與順序，`give_feedback` 裡是帶著手冊與工具的小 agent；每份作業的題目放在 State.spec，read_spec 只讀本份題目；用 SQLite checkpointer 依 `thread_id` 存 State | 2-D（`%%writefile`） |
 
 ### 2-E（課後選做）：上雲端前的準備
 

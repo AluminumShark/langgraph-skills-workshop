@@ -4,8 +4,8 @@ NAME = "2-D_dual_core"
 作業選項 = '["命名不一致", "變數打錯字", "正確的程式", "少了右括號"]'
 需求選項 = '["幫第一次交作業的初學者看看", "期中考正式評分，請嚴格審查"]'
 SUPPORT = [
-    "tools/__init__.py", "tools/run_code.py", "tools/read_spec.py", "tools/check_naming.py",
-    "graph.py", "skill_loader.py", "spec.md",
+    "tools/__init__.py", "tools/run_code.py", "tools/check_naming.py",
+    "graph.py", "skill_loader.py",
     "skills/friendly-feedback/SKILL.md", "skills/strict-review/SKILL.md",
     "skills/naming-check/SKILL.md", "skills/naming-check/scripts/check_naming.py",
 ]
@@ -36,6 +36,7 @@ def cells():
         - **裡面**的 `give_feedback`（寫回饋）這一站，是一個小 agent（由 AI 判斷）：
           手冊用 2-A 的「溫和鼓勵」或「嚴格審查」，工具箱裡有 2-B 的命名檢查腳本 `check_naming`、`run_code`（執行作業）、`read_spec`（讀題目要求）。
           要不要檢查命名、要不要讀題目，由它自己決定。
+        - 題目與作業在新執行時配對，題目存入 State 的 `spec`。`read_spec` 只讀這份 State 的題目，不讀共用 `spec.md`；續跑仍使用原存檔的題目。
         - 新零件 `skill_loader`：流程裡的一站，看所有手冊的**名片**（`SKILL.md` 開頭的 name 和 description），挑一本，把內文交給下一站。
         - 最後用 **checkpointer**（自動存檔）和 **thread_id**（存檔的編號）把每一步的 **State**（在各站之間傳遞的那張「訂單紙」，一個 dict）存起來：
           中斷了也能接著跑。
@@ -125,9 +126,11 @@ def cells():
         小助教 = dual_core.建立整合小助教(model, checkpointer=dual_core.開存檔(),
                                          最多重試次數=最多生成次數, 回饋字數上限=回饋字數上限)
         config = {{"configurable": {{"thread_id": f"完整示範-{{time.time_ns()}}"}}}}
-        state = dual_core.逐站執行(小助教, {{"code": 取得作業(作業), "request": 批改需求, "retries": 0}}, config)
+        state = dual_core.逐站執行(小助教, dual_core.作業輸入(作業, 取得作業(作業), 批改需求), config)
 
         print("\\n========== 結果 ==========")
+        print("本次作業：", 作業)
+        print("本次題目要求：", state.get("spec"))
         print("挑中的手冊：", state.get("skill_name"))
         print("裡面的 agent 用了哪些工具：", state.get("tools_used") or "（沒有用工具）")
         print(f"已生成回饋 {{state.get('retries', 0)}} 次；format_ok = {{state.get('format_ok')}}")
@@ -157,7 +160,7 @@ def cells():
         **checkpointer** 會在每一站跑完時把整張訂單紙（State）存起來；**thread_id** 是這份存檔的編號，像置物櫃的號碼。
         這裡的存檔放在 `/content/review-bot/checkpoints.sqlite` 這個檔案裡，只要這個檔案還在，重跑 cell 就能讀回。Colab 刪除或更換執行階段可能移除本機檔案；檔案不在時就沒有舊存檔。
 
-        本段先固定使用語法正確的「命名不一致」與初學者需求。使用全新 thread_id 時，下面這格會在 `give_feedback` **前面**暫停。這是可預期的教學中斷，不是實際模擬斷線後的所有恢復情況；語法錯誤會走另一條分支，無法停在這裡。
+        本段先固定使用語法正確的「命名不一致」與初學者需求，並保存對應的平均值題目。使用全新 thread_id 時，下面這格會在 `give_feedback` **前面**暫停。這是可預期的教學中斷，不是實際模擬斷線後的所有恢復情況；語法錯誤會走另一條分支，無法停在這裡。
 
         ### 🤔 預測題
         停下來的時候，存檔裡的 State 會有哪幾格已經填好？`feedback` 有內容嗎？
@@ -173,11 +176,13 @@ def cells():
         小助教 = dual_core.建立整合小助教(model, checkpointer=dual_core.開存檔(), interrupt_before=["give_feedback"])
         config = {{"configurable": {{"thread_id": thread_id}}}}
         舊存檔 = 小助教.get_state(config)
+        if 舊存檔.values and not 舊存檔.values.get("spec"):
+            raise SystemExit("這是未保存題目的舊版存檔。請在第 3、4 段換成同一個全新 thread_id，再做暫停與接續；原存檔保留。")
         if 舊存檔.values:
             print(f"此編號已有存檔：{{'尚未完成' if 舊存檔.next else '已完成'}}。本格保留原內容，不重新送入作業。")
             print("要接著跑請去第 4 段；要重設實驗，請在第 3、4 段填同一個全新編號，例如「小明的作業-2」。")
         else:
-            dual_core.逐站執行(小助教, {{"code": 取得作業(作業), "request": 批改需求, "retries": 0}}, config)
+            dual_core.逐站執行(小助教, dual_core.作業輸入(作業, 取得作業(作業), 批改需求), config)
         存檔 = 小助教.get_state(config)
         print(f"\\n📂 thread_id「{{thread_id}}」的存檔：")
         印出狀態({{k: v for k, v in 存檔.values.items() if k not in ("skill", "code")}})
@@ -188,6 +193,7 @@ def cells():
         ### 👀 你看到了什麼
 
         - 使用全新編號和預設作業時，停在 `give_feedback` 前面：`syntax_ok`、`skill_name` 已經填好，`feedback` 還是空的。
+        - 題目也已存入 `spec`：這份平均值作業不會讀到前一本留下的加法題。續跑使用存檔，不採當前表單的新題目。舊版沒有 `spec` 的存檔請換全新編號，不刪原檔。
         - 「下一站」是 `('give_feedback',)`：存檔不只記得 State，也記得**流程走到哪裡**。
         """),
         md(f"""
@@ -224,9 +230,11 @@ def cells():
         config = {{"configurable": {{"thread_id": thread_id}}}}
         存檔 = 小助教.get_state(config)
 
+        if 存檔.values and not 存檔.values.get("spec"):
+            raise SystemExit("這是未保存題目的舊版存檔。請回第 3 段，用全新 thread_id 建立暫停狀態，再填相同 ID 接續。")
         if not 存檔.values:
             print(f"🆕 thread_id「{{thread_id}}」沒有任何存檔：State 是空白的，從頭開始跑\\n")
-            state = dual_core.逐站執行(小助教, {{"code": 取得作業(作業), "request": 批改需求, "retries": 0}}, config)
+            state = dual_core.逐站執行(小助教, dual_core.作業輸入(作業, 取得作業(作業), 批改需求), config)
             狀況 = "沒有存檔，從空白開始"
         elif 存檔.next:
             print(f"📂 找到 thread_id「{{thread_id}}」的存檔：停在 {{存檔.next}} 前面，接著跑")
@@ -239,6 +247,7 @@ def cells():
             狀況 = "已經跑完"
 
         print("\\n========== 現在的 State ==========")
+        print("存檔中的題目：", state.get("spec"))
         印出狀態({{k: v for k, v in state.items() if k not in ("skill", "code")}})
         print("最新存檔的下一站：", 小助教.get_state(config).next or "（流程已結束）")
         print("結果判讀：", "語法未通過，未進行回饋格式檢查" if state.get("syntax_ok") is False else
@@ -300,7 +309,7 @@ def cells():
         這個附錄換了一個系統：**純 agent**，不是前面第 1–5 段的整合版小助教；它把 check_syntax 也放進可選工具箱。若沒有外層流程，怎麼知道它有沒有照規矩做？答案是**考它**。
 
         把「agent 應該怎麼做」寫成程式能自動批改的考題，叫做 **eval**（評測）。這裡有五個考題（eval case），
-        每題檢查兩件事：**第一個該叫哪個工具**、**最後的回覆要有哪些字**。考卷是程式在改，不是人在看。我們比較兩個版本的 system prompt：
+        每題各自綁定對應的題目要求，避免平均值題讀到加法規格。每題檢查兩件事：**第一個該叫哪個工具**、**最後的回覆要有哪些字**。考卷是程式在改，不是人在看。我們比較兩個版本的 system prompt：
 
         - **baseline**（原本的版本，拿來當比較的基準）：沒有特別交代順序
         - **v2**：多一句「一定要先呼叫 check_syntax 再回饋」（這裡的 `check_syntax` 是把小助教的語法檢查包成一把工具）
@@ -317,7 +326,7 @@ def cells():
         from langchain.agents import create_agent
         from langchain.tools import tool
         import graph
-        from tools.read_spec import read_spec
+        import dual_core
         from tools.run_code import run_code
 
         @tool
@@ -335,7 +344,9 @@ def cells():
             {"id": "005_naming", "作業": "命名不一致", "must_call_first": "check_syntax", "must_contain_in_final": ["優點", "改進"]},
         ]
 
-        def evaluate_one(考生, case):
+        def evaluate_one(system_prompt, case):
+            read_spec = dual_core.建立_read_spec(dual_core.範例題目[case["作業"]])
+            考生 = create_agent(model, tools=[check_syntax, run_code, read_spec], system_prompt=system_prompt)
             inputs = {"messages": [{"role": "user", "content": f"幫我批改這份作業：\\n```python\\n{取得作業(case['作業'])}\\n```"}]}
             events = list(考生.stream(inputs, stream_mode="updates"))
             msgs = [m for e in events for u in e.values() for m in (u or {}).get("messages", [])]
@@ -362,9 +373,8 @@ def cells():
         else:
             成績 = {}
             for 版本, system_prompt in 版本們.items():
-                考生 = create_agent(model, tools=[check_syntax, run_code, read_spec], system_prompt=system_prompt)
                 print(f"===== {版本} =====")
-                結果們 = [evaluate_one(考生, case) for case in EVAL_CASES]
+                結果們 = [evaluate_one(system_prompt, case) for case in EVAL_CASES]
                 for r in 結果們:
                     print(f"[{'PASS' if r['passed'] else 'FAIL'}] {r['id']}  tool_calls={r['tool_calls']}")
                     for why in r["reasons"]:

@@ -15,21 +15,29 @@ from pathlib import Path
 from typing import Annotated, TypedDict
 
 from langchain.agents import create_agent
+from langchain.tools import tool
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
 
 from graph import check_syntax, explain_error, route_after_syntax, 建立_check_format, 建立_route_after_format
 from skill_loader import 列出名片, 挑手冊, 讀內文
 from tools.check_naming import check_naming
-from tools.read_spec import read_spec
 from tools.run_code import run_code
 
 存檔位置 = Path(__file__).resolve().parent / "checkpoints.sqlite"
 可選的手冊 = ["friendly-feedback", "strict-review"]
+範例題目 = {
+    "正確的程式": "請寫一個函式 add(a, b)，回傳兩個數字相加的結果，並用 print(add(2, 3)) 印出 5。",
+    "變數打錯字": "請寫一個函式 add(a, b)，回傳兩個數字相加的結果，並用 print(add(2, 3)) 印出 5。",
+    "少了右括號": "請用 print 印出 hi。",
+    "命名不一致": "請寫一個函式計算分數列表的平均值，用 [90, 85, 77] 測試並印出平均值與滿分 100 供比較。變數、函式與參數採小寫加底線命名。",
+    "縮排亂掉": "請寫一個 average(scores) 函式計算分數平均值，並印出 average([90, 85, 77]) 的結果。",
+}
 
 
 class 整合State(TypedDict, total=False):
     code: str                 # 學生交的作業
+    spec: str                 # 與這份作業配對的題目，隨 State 一起存檔
     request: str              # 批改需求（skill_loader 用它挑手冊）
     syntax_ok: bool | None
     error: str
@@ -42,6 +50,26 @@ class 整合State(TypedDict, total=False):
     tools_used: Annotated[list[str], operator.add]  # 裡面的 agent 用過哪些工具（往下接著寫）
 
 
+def 作業輸入(作業名稱: str, code: str, 批改需求: str) -> 整合State:
+    """在新執行開始時配對題目；續跑使用存檔，不重新讀表單或共用檔案。"""
+    if 作業名稱 not in 範例題目:
+        raise ValueError(f"尚未設定這份作業的題目：{作業名稱}")
+    return {"code": code, "spec": 範例題目[作業名稱], "request": 批改需求, "retries": 0}
+
+
+def 建立_read_spec(題目要求: str):
+    """工具仍由 agent 選用，但讀取內容固定為該份 State 的題目。"""
+    if not isinstance(題目要求, str) or not 題目要求.strip():
+        raise ValueError("State 缺少題目 spec；請使用作業輸入建立新執行。舊存檔請換全新 thread_id，不沿用共用 spec.md。")
+
+    @tool
+    def read_spec() -> str:
+        """讀取這份作業對應的題目要求；判斷是否符合題意前使用，不需要參數。"""
+        return 題目要求
+
+    return read_spec
+
+
 def 建立_skill_loader(model):
     def skill_loader(state: 整合State) -> dict:
         card = 挑手冊(model, state.get("request", ""), 列出名片(可選的手冊))
@@ -52,6 +80,7 @@ def 建立_skill_loader(model):
 
 def 建立_give_feedback(model, 回饋字數上限: int):
     def give_feedback(state: 整合State) -> dict:
+        read_spec = 建立_read_spec(state.get("spec", ""))
         system_prompt = (
             f"{state['skill']}\n\n"
             "# 你的工具\n"

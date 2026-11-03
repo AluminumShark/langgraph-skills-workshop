@@ -282,7 +282,7 @@ def cells():
         我們在程式裡設 `recursion_limit=25` 來限制圖的執行步數；這不是「最多呼叫 25 次工具」，模型節點也會占步數。模型也可能先自行停止。
 
         ### 🤔 預測題
-        模型會自行停止，還是持續呼叫工具直到達上限？步數與工具呼叫次數會相同嗎？
+        模型會自行停止，還是持續要求工具直到達上限？圖的步數、工具要求次數與工具回傳次數會相同嗎？
         """),
         code("""
         #@title ▶ 執行：一個永遠失敗的工具，觀察自行停止或達到 recursion limit
@@ -300,30 +300,35 @@ def cells():
             model, tools=[always_fail],
             system_prompt="你的任務是呼叫 always_fail 直到它成功為止。不管失敗幾次都要再試，不要放棄，也不要用文字回答。",
         )
-        次數 = 0
+        工具要求次數, 工具回傳次數 = 0, 0
         try:
             for step, event in enumerate(繞圈agent.stream({"messages": [{"role": "user", "content": "開始吧"}]},
                                                        config={"recursion_limit": 25}, stream_mode="updates"), start=1):
                 for node, update in event.items():
                     for msg in (update or {}).get("messages", []):
                         if getattr(msg, "tool_calls", None):
-                            次數 += len(msg.tool_calls)
-                            print(f"--- 第 {step} 步 | 節點: {node} ---  模型決定呼叫 -> always_fail()")
+                            for call in msg.tool_calls:
+                                if call["name"] == "always_fail":
+                                    工具要求次數 += 1
+                                print(f"--- 第 {step} 步 | 節點: {node} ---  模型要求 -> {call['name']}({call['args']})")
                         elif msg.type == "tool":
+                            if getattr(msg, "name", None) == "always_fail":
+                                工具回傳次數 += 1
                             print(f"--- 第 {step} 步 | 節點: {node} ---  [ToolMessage] {msg.text}")
                         else:
                             print(f"--- 第 {step} 步 | 節點: {node} ---  [AIMessage] {msg.text[:80]}")
             print("\\n（這次模型自行停止，沒有達到上限；工具仍未成功。請記錄這個結果。）")
         except GraphRecursionError as e:
             print(f"\\n🛑 GraphRecursionError：{str(e).splitlines()[0]}")
-        print(f"模型總共呼叫了 always_fail {次數} 次")
-        記下("1-B 第 5 段：recursion limit", {"呼叫次數": 次數})
+        print(f"always_fail：模型提出 {工具要求次數} 次工具要求，收到 {工具回傳次數} 次工具回傳")
+        記下("1-B 第 5 段：recursion limit", {"工具要求次數": 工具要求次數, "工具回傳次數": 工具回傳次數})
         """),
         md("""
         ### 👀 你看到了什麼
 
         - 若模型持續叫 `always_fail`，每一圈都會增加模型呼叫成本；也可能自行停止。
         - 持續執行而達到步數上限時，會得到 `GraphRecursionError`。停止不等於任務成功。
+        - 分開讀 **工具要求次數** 與 **工具回傳次數**，兩者只計 `always_fail`。模型提出最後一個要求後，可能先達步數上限，還沒得到工具結果；不能把要求數當成已執行次數。
         - 1-0 的「最多 5 圈」、1-A 的「最多生成次數」、這裡的 `recursion_limit`，都是在程式中設停止上限；三者計算的單位不同。
         - 接著看 MCP 示範，再到簡報第四站討論：哪些步驟由流程控制、哪些交給 AI 判斷。
         """),
@@ -345,7 +350,7 @@ def cells():
         有三個工具：`list_homework`（誰交了作業）、`get_homework`（拿某位同學的作業）、`send_email`（寄信，假的，只寫進 `寄件匣.txt`）。
         打開看就會發現：**它就是幾個普通的 Python 函式，上面加了 `@mcp.tool()`**，然後在自己的程式裡跑起來。
 
-        接著用 `langchain-mcp-adapters` 這個套件把插座接上，拿到的工具和三把本地工具一起交給 agent。
+        接著用 `langchain-mcp-adapters` 這個套件把插座接上，先篩選出兩把讀取工具，再和三把本地工具一起交給 agent。
         （`create_agent` 是「把模型和工具箱組成 agent」的函式，前面的本地 agent 已經用過它。
         程式裡的 `await` 意思是「等這件事做完再往下」：MCP 工具要透過插座和另一個程式溝通，所以要用 `await`，Colab 的格子可以直接寫。）
 
@@ -368,17 +373,20 @@ def cells():
         mcp工具 = await 插座.get_tools()          # Colab 可以直接寫 await
         mcp名稱 = {t.name for t in mcp工具}
 
-        print("🧰 工具箱裡現在有：")
-        for t in agent.小助教的工具 + mcp工具:
+        print("MCP server 可提供的工具：", "、".join(sorted(mcp名稱)))
+
+        # 最小權限：這個 agent 只需要「讀」作業，僅提供兩把讀取工具
+        讀作業的工具 = [t for t in mcp工具 if t.name in {"list_homework", "get_homework"}]
+        可用工具 = agent.小助教的工具 + 讀作業的工具
+        print(f"\\n🧰 實際交給 agent 的工具（共 {len(可用工具)} 把）：")
+        for t in 可用工具:
             來源 = "MCP 插座（住在另一個程式）" if t.name in mcp名稱 else "本地函式（住在這個程式）"
             print(f"  - {t.name:<14} ← {來源}")
             print(f"      說明：{' '.join(t.description.split())[:70]}")
             print(f"      參數：{list(t.args)}")
 
-        # 最小權限：這個 agent 只需要「讀」作業，所以不把會寄信的 send_email 交給它
-        讀作業的工具 = [t for t in mcp工具 if t.name != "send_email"]
         小助教 = create_agent(
-            model, tools=agent.小助教的工具 + 讀作業的工具,
+            model, tools=可用工具,
             system_prompt=agent.基本_system_prompt + "學生交的作業放在作業倉庫裡，要用 get_homework 拿到程式碼。",
         )
         問題 = "幫我看小美交的作業，跑跑看有沒有錯。"
@@ -399,12 +407,13 @@ def cells():
                     else:
                         print(f"--- 第 {步} 步 | 節點: {節點} ---  [AIMessage] {msg.text[:300]}")
         print("\\n這次用工具的順序：", " → ".join(順序) or "（沒有用任何工具）")
-        記下("1-B 第 6 段：接上 MCP 插座", {"MCP 工具": sorted(mcp名稱), "用工具的順序": 順序})
+        記下("1-B 第 6 段：接上 MCP 插座", {"server 可提供的 MCP 工具": sorted(mcp名稱),
+                                            "實際交給 agent 的工具": [t.name for t in 可用工具], "用工具的順序": 順序})
         """),
         md("""
         ### 👀 你看到了什麼
 
-        - 取得的清單有三把 MCP 工具；實際只交給 agent 兩把讀取工具。它們和 `run_code` 都有相同的基本介面：都有名字、說明書、參數，**都是「我可以呼叫的工具」**。
+        - 輸出先列出 **server 可提供的三把 MCP 工具**，再列出 **實際交給 agent 的五把工具**：三把本地工具，加上兩把 MCP 讀取工具。工具的基本介面相同：都有名字、說明書與參數。
         - 差別在**工具住在哪裡**：`get_homework` 真正執行的地方是旁邊那個「作業倉庫」程式，不是這個 notebook。
           其他 MCP server 可以在本機或遠端；認證方式依服務而定，MCP 不會自動替你取得權限。
         - 檢查實際紀錄：是否先用 MCP 的 `get_homework` 取得作業，再用本地的 `run_code` 執行？這個例子讓你觀察**兩種來源的工具混在同一個迴圈裡用**。
