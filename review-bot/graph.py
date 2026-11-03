@@ -93,7 +93,7 @@ def 建立_give_feedback(model, 回饋字數上限: int):
             "你是 Python 作業小助教，請用繁體中文給下面這段作業回饋。\n"
             "格式規定（一定要遵守）：\n"
             "- 只寫兩段：第一段以「優點：」開頭，第二段以「改進：」開頭\n"
-            f"- 兩段加起來不超過 {回饋字數上限} 個字\n\n"
+            f"- 整段回饋（含「優點：」「改進：」與換行）不超過 {回饋字數上限} 個字元\n\n"
             f"作業：\n```python\n{state['code']}\n```"
         )
         if state.get("format_problem"):
@@ -115,7 +115,7 @@ def 建立_check_format(回饋字數上限: int):
         if not parts or not all(part.strip() for part in parts.groups()):
             問題.append("需依序寫出「優點：內容」與「改進：內容」兩段")
         if len(feedback) > 回饋字數上限:
-            問題.append(f"太長了：{len(feedback)} 字，上限 {回饋字數上限} 字")
+            問題.append(f"太長了：{len(feedback)} 字元（含標籤與換行），上限 {回饋字數上限} 字元")
         return {"format_ok": not 問題, "format_problem": "；".join(問題)}
 
     return check_format

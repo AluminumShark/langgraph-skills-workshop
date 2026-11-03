@@ -1,10 +1,10 @@
-"""run_code：在籠子裡執行學生的作業。
+"""run_code：在教學限制下執行學生的作業。
 
-學生作業裡什麼都可能有（import os 刪檔、無限迴圈），所以這個工具有三道圍欄：
-1. 執行前先檢查：不准 import os / sys / subprocess / shutil 這類危險模組，
-   也不准用 eval、exec、open 和底線開頭的屬性（常被拿來繞過限制）
+學生作業裡什麼都可能有（import os 刪檔、無限迴圈），所以這個工具有兩道執行限制，加上一個方便閱讀的設計：
+1. 執行前先檢查：只准 import 少數標準模組（math、random、re…），os / sys / subprocess 這類一律擋下；
+   也不准用 eval、exec、open、input 和底線開頭的屬性（常被拿來繞過限制）
 2. 開一個獨立的子程序執行，超過時間就強制停止（無限迴圈也停得下來）
-3. 只回一行結果（第幾行、什麼錯），模型才看得懂
+3. 只回一行結果（第幾行、什麼錯），方便人與模型閱讀；這不是安全限制
 
 ⚠️ 這是教學用的圍欄。正式產品請用真正的 sandbox（容器、RestrictedPython、e2b、Modal）。
 """
@@ -121,11 +121,11 @@ def 執行作業(code: str, 最長時間: float = 最長時間_秒) -> str:
 
 @tool
 def run_code(code: str) -> str:
-    """安全地執行一段 Python 作業，回傳輸出或錯誤訊息。
+    """在教學限制下執行一段 Python 作業，回傳輸出或錯誤訊息。
 
     什麼時候用：想知道作業「實際跑起來」會印出什麼、會不會出錯時。
     參數 code：完整的 Python 程式碼（字串）。
     回傳：一行結果，例如「✅ 執行成功，輸出：5」或「❌ 第 3 行 NameError: ...」。
-    限制：不能 import os、sys、subprocess 等模組；超過 3 秒會被停止。
+    限制：只能 import math、random、re 等少數標準模組；不能用 input()、open()；超過 3 秒會被停止。
     """
     return 執行作業(code)
