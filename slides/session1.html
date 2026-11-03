@@ -923,11 +923,11 @@ print(run_code.description)    # 這就是 docstring
 print(run_code.args)" aria-label="複製這段程式碼">複製</button></div>
     <div class="okl mt" style="margin-top:14px">實際輸出（節錄）</div>
     <pre class="term sz24"><code>run_code
-安全地執行一段 Python 作業，回傳……
+在教學限制下執行一段 Python 作業……
 什麼時候用：想知道作業「實際跑起來」……
 參數 code：完整的 Python 程式碼（字串）。
 回傳：一行結果，例如「✅ 執行成功……」
-限制：不能 import os、sys、subprocess……
+限制：只能 import math、random、re 等……
 {'code': {'title': 'Code', 'type': 'string'}}</code></pre>
     <p class="nb" style="font-size:28px"><span class="mono">@tool</span> 把函式名稱、參數、docstring 包成 結構化工具資訊提供給模型。</p>
   </div>
@@ -942,12 +942,12 @@ print(run_code.args)" aria-label="複製這段程式碼">複製</button></div>
 
 <section id="s1-033" data-original-page="33" data-track="Agent" class="slide sec3" data-title="一行做出 agent：create_agent" aria-hidden="true" aria-label="第 34 頁：一行做出 agent：create_agent"><div class="colabtag"><span class="where c">Colab</span>1-B 第 3 段：一行做出 agent</div><div class="sb">
 <h1 class="h sm">一行做出 agent：<span class="mono">create_agent</span></h1>
-<div class="codewrap"><pre class="code sz28"><code><span class="ln"><span class="c-kw">from</span> langchain.agents <span class="c-kw">import</span> create_agent</span><span class="ln"><span class="c-kw">from</span> langchain.tools <span class="c-kw">import</span> tool</span><span class="ln"> </span><span class="ln"><span class="c-dec">@tool</span></span><span class="ln"><span class="c-kw">def</span> <span class="c-fn">run_code</span>(code: str) -&gt; str:</span><span class="ln">    <span class="c-str">"""執行一段 Python 作業，回傳輸出或錯誤訊息。"""</span></span><span class="ln">    ...</span><span class="ln"> </span><span class="ln">小助教 = create_agent(model, tools=[run_code, check_indent, read_spec],</span><span class="ln">                    system_prompt=<span class="c-str">"你是 Python 作業小助教……"</span>)</span></code></pre><button class="copy" data-copy="from langchain.agents import create_agent
+<div class="codewrap"><pre class="code sz28"><code><span class="ln"><span class="c-kw">from</span> langchain.agents <span class="c-kw">import</span> create_agent</span><span class="ln"><span class="c-kw">from</span> langchain.tools <span class="c-kw">import</span> tool</span><span class="ln"> </span><span class="ln"><span class="c-dec">@tool</span></span><span class="ln"><span class="c-kw">def</span> <span class="c-fn">run_code</span>(code: str) -&gt; str:</span><span class="ln">    <span class="c-str">"""在教學限制下執行一段 Python 作業，回傳輸出或錯誤訊息。"""</span></span><span class="ln">    ...</span><span class="ln"> </span><span class="ln">小助教 = create_agent(model, tools=[run_code, check_indent, read_spec],</span><span class="ln">                    system_prompt=<span class="c-str">"你是 Python 作業小助教……"</span>)</span></code></pre><button class="copy" data-copy="from langchain.agents import create_agent
 from langchain.tools import tool
 
 @tool
 def run_code(code: str) -&gt; str:
-    &quot;&quot;&quot;執行一段 Python 作業，回傳輸出或錯誤訊息。&quot;&quot;&quot;
+    &quot;&quot;&quot;在教學限制下執行一段 Python 作業，回傳輸出或錯誤訊息。&quot;&quot;&quot;
     ...
 
 小助教 = create_agent(model, tools=[run_code, check_indent, read_spec],
