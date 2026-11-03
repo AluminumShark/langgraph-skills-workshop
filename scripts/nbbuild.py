@@ -13,6 +13,7 @@ import copy
 import hashlib
 import json
 import textwrap
+from collections import Counter
 from pathlib import Path
 
 import nbformat
@@ -260,6 +261,35 @@ def _keep_outputs(new_cells: list, old_path: Path) -> int:
     return kept
 
 
+def _archive_replaced_outputs(new_cells: list, old_path: Path) -> Path | None:
+    """改過的程式不沿用舊結果；覆寫前先保存原始程式與輸出的完整快照。"""
+    if not old_path.exists():
+        return None
+    raw = old_path.read_bytes()
+    old = nbformat.reads(raw.decode("utf-8"), as_version=4)
+    remaining = Counter(c.source for c in new_cells if c.cell_type == "code")
+    replaced = 0
+    for cell in old.cells:
+        if cell.cell_type != "code":
+            continue
+        if remaining[cell.source]:
+            remaining[cell.source] -= 1
+        elif cell.get("outputs"):
+            replaced += 1
+    if not replaced:
+        return None
+    digest = hashlib.sha256(raw).hexdigest()
+    archive = old_path.parent / "output-history" / old_path.stem / f"{digest}.ipynb"
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    if archive.exists():
+        if archive.read_bytes() != raw:
+            raise RuntimeError(f"輸出快照內容不符，停止覆寫：{archive}")
+    else:
+        archive.write_bytes(raw)
+    print(f"⚠️ {old_path.name}：{replaced} 格舊輸出不適用新版程式，完整快照已保存至 {archive}")
+    return archive
+
+
 def build(name: str, cells: list) -> Path:
     out = REPO / "notebooks" / f"{name}.ipynb"
     nb = new_notebook(cells=cells)
@@ -271,6 +301,7 @@ def build(name: str, cells: list) -> Path:
     _keep_outputs(nb.cells, out)
     _stable_ids(nb.cells, out)
     nbformat.validate(nb)
+    _archive_replaced_outputs(nb.cells, out)
     # 和 Colab 存檔的格式一樣（縮排 2 格、metadata 裡也有 id），兩邊互相存檔時 diff 才會小
     out.write_text(_colab_json(nb), encoding="utf-8", newline="\n")
     return out

@@ -148,7 +148,7 @@ uv run python scripts/build_notebooks.py
 
 只想產生其中幾本，在後面加上名稱開頭（例如 `1-A 2-B`）。
 
-**只有程式來源完全相同的格子會沿用舊輸出**；重排依內容配對，修改過的程式會清空輸出。
+**只有程式來源完全相同的格子會沿用舊輸出**；重排依內容配對。修改或刪除程式格時，產生器會先將含舊輸出的整本 notebook 備份至 [output-history](notebooks/output-history/README.md)，顯示位置後再產生新版；備份失敗就停止覆寫。
 即使沿用輸出，也不代表已驗證新的前置檔案與模型行為；課前仍要在 Colab 試跑，再儲存結果。
 在 Colab 上直接改的文字（例如格子標題），也要同步改進 `scripts/nbspec/`，不然下次產生會被蓋掉。
 重新產生前先 `git pull`，拿到 Colab 存回來的最新版本。

@@ -1,13 +1,16 @@
 """Notebook 重排或修改時，不可把舊輸出接到另一個實驗。"""
 import sys
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import nbformat
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from nbbuild import _keep_outputs, _stable_ids
+import nbbuild
 
 
 class PreserveOutputsTest(unittest.TestCase):
@@ -35,6 +38,69 @@ class PreserveOutputsTest(unittest.TestCase):
             self.assertEqual(new[2].outputs[0].text, "result-0")
             self.assertEqual(new[3].outputs[0].text, "result-2")
             self.assertEqual(len({c.id for c in new}), len(new))
+
+
+class ArchiveOutputsTest(unittest.TestCase):
+    def make_old(self, root):
+        out = root / "notebooks" / "example.ipynb"
+        out.parent.mkdir()
+        cell = nbformat.v4.new_code_cell("print('old')", execution_count=7)
+        cell.outputs = [nbformat.v4.new_output("stream", name="stdout", text="real old result\n")]
+        nbformat.write(nbformat.v4.new_notebook(cells=[cell]), out)
+        return out
+
+    def test_changed_code_archives_exact_original_before_clearing_output(self):
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work)
+            out = self.make_old(root)
+            raw = out.read_bytes()
+            with patch.object(nbbuild, "REPO", root):
+                nbbuild.build("example", [nbformat.v4.new_code_cell("print('new')")])
+                nbbuild.build("example", [nbformat.v4.new_code_cell("print('new')")])
+            snapshots = list((out.parent / "output-history" / "example").glob("*.ipynb"))
+            self.assertEqual(len(snapshots), 1)
+            self.assertEqual(snapshots[0].stem, hashlib.sha256(raw).hexdigest())
+            self.assertEqual(snapshots[0].read_bytes(), raw)
+            new = nbformat.read(out, as_version=4).cells[0]
+            self.assertEqual(new.outputs, [])
+            self.assertIsNone(new.execution_count)
+
+    def test_markdown_edit_keeps_output_without_archive(self):
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work)
+            out = self.make_old(root)
+            with patch.object(nbbuild, "REPO", root):
+                nbbuild.build("example", [nbformat.v4.new_markdown_cell("new explanation"),
+                                         nbformat.v4.new_code_cell("print('old')")])
+            self.assertFalse((out.parent / "output-history").exists())
+            cell = nbformat.read(out, as_version=4).cells[1]
+            self.assertEqual(cell.outputs[0].text, "real old result\n")
+            self.assertEqual(cell.execution_count, 7)
+
+    def test_removed_duplicate_with_distinct_result_is_archived(self):
+        with tempfile.TemporaryDirectory() as work:
+            out = self.make_old(Path(work))
+            old = nbformat.read(out, as_version=4)
+            second = nbformat.v4.new_code_cell("print('old')", execution_count=8)
+            second.outputs = [nbformat.v4.new_output("stream", name="stdout", text="second result")]
+            old.cells.append(second)
+            nbformat.write(old, out)
+            raw = out.read_bytes()
+            archive = nbbuild._archive_replaced_outputs([old.cells[0]], out)
+            self.assertEqual(archive.read_bytes(), raw)
+            self.assertEqual(out.read_bytes(), raw)
+
+    def test_archive_failure_leaves_original_notebook_untouched(self):
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work)
+            out = self.make_old(root)
+            raw = out.read_bytes()
+            with patch.object(nbbuild, "REPO", root), patch.object(
+                nbbuild, "_archive_replaced_outputs", side_effect=OSError("disk full")
+            ):
+                with self.assertRaises(OSError):
+                    nbbuild.build("example", [nbformat.v4.new_code_cell("print('new')")])
+            self.assertEqual(out.read_bytes(), raw)
 
 
 if __name__ == "__main__":

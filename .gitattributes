@@ -1,0 +1,2 @@
+# Output snapshots retain the exact original bytes used for their SHA-256 names.
+notebooks/output-history/**/*.ipynb -text

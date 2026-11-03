@@ -48,7 +48,7 @@ NTU AI Club 工作坊，對象是剛學會 Python 的初學者，兩堂各 120 �
 
 1. 修改前確認工作樹，必要時先 git pull 取得講師從 Colab 存回的版本；不要覆蓋未提交變更。
 2. 修改 nbspec 與 review-bot，再執行 uv run python scripts/build_notebooks.py；可加 1-A 2-B 等名稱前綴。
-3. 只有來源完全相同的 code cell 才沿用舊輸出，重排不依位置接輸出；修改過的程式清空輸出。沿用輸出不等於驗過新前置狀態。
+3. 只有來源完全相同的 code cell 才沿用舊輸出，重排不依位置接輸出；修改過的程式不沿用舊結果。產生器在覆寫前會把有失效輸出的舊 notebook 完整保存到 notebooks/output-history/ 並提示位置；備份失敗就停止覆寫。檢查並提交需要保留的快照。沿用輸出不等於驗過新前置狀態，不能由空白輸出推論使用者未執行。
 4. 執行 uv run python -m unittest discover -s tests，檢查語意與輸出保存的回歸案例。
 5. 執行 uv run python scripts/verify_notebooks.py，把八本 notebook 從頭跑到尾。使用 tests/mock_colab/ 假模型，僅驗程式流程，不代表真實模型品質或正式 Colab 相容性。
 6. 修改投影片後執行 scripts/sync_slide_navigation.py --check，檢查頁次、內文引用與大綱一致。
