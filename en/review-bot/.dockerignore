@@ -1,0 +1,12 @@
+# Things to keep out of the container: keys, local checkpoints, run logs
+.env
+.llm.json
+checkpoints.sqlite*
+deploy/*.sqlite*
+deploy/.port
+deploy/.mcp_port
+deploy/*.log
+history.jsonl
+outbox.txt
+2B_results.json
+__pycache__/

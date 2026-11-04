@@ -1,0 +1,143 @@
+Technical Workshop Proposal
+Suggested length: two to three A4 pages
+Proposers: Yu-Chi Ko, Levi Lee
+Planned number of sessions: 3
+Planned time per session: 120 minutes
+Tentative dates: none
+1. Workshop name
+Chinese name (translated here):
+From LangGraph to Skills: A Dual Guide to Structured and Unstructured Agents
+English name (optional):
+Agents in 2026: Mastering LangGraph & SKILL.md
+One-sentence introduction:
+Help students see through the two major camps of AI agents in 2026: from building LangGraph workflows with absolute determinism, to mastering Markdown-driven Agent Skills, and finally building their own dual-core AI assistant.
+
+2. Why is this workshop worth running?
+The community is currently praising Agent Skills to the sky, as if writing a few lines of Markdown in a SKILL.md lets the AI handle all your work automatically. The reality is that more than a third of open-source Skills carry a Prompt Injection risk, and an agent with too much freedom often becomes "too helpful" and loses control of the process.
+This course is valuable because it does not only teach the newest cool toy. We will directly puncture the myth of Skills, and tell students why many enterprise applications (including inside large tech companies) still insist on frameworks like LangGraph, which have graph structure and state management. Students will learn how to combine the strengths of both: use LangGraph to draw the uncrossable red lines of business logic, and at specific nodes let Agent Skills loose to use their powerful unstructured-processing ability. After finishing, students can apply this architecture to their own automation projects, and can also connect to real industry development thinking.
+3. Core learning outcomes
+After the workshop, students should be able to:
+Design and deploy a LangGraph flow with State Management and conditional routing.
+Write a SKILL.md that conforms to the agentskills.io industry standard, and understand its Progressive Disclosure loading mechanism.
+Evaluate and decide, for a specific task, when to use a framework to constrain the AI and when to release the AI's autonomy.
+4. Final deliverable
+By the end of the workshop, students are expected to complete:
+Main deliverable: a "dual-core Agent" that can handle a task in a specific domain (for example: automatically reviewing code and publishing a report, or analyzing a folder structure and organizing it). The topic is not decided yet. We plan to prepare a sample for everyone to use, and people who have bought Claude Code are also welcome to vibe-code their own workflow.
+Format: a GitHub Repository (containing the graph.py structure and a .claude/skills/ directory).
+Minimum completion standard: the Agent can correctly trigger and run at least one custom Markdown Agent Skill inside a controlled LangGraph node, with no loss of state.
+5. Suitable students
+Target audience: students with basic Python ability and experience with LLMs / generative AI. At the very least, they must have used a vibe-coding tool to produce an agent that runs.
+Required background: understanding basic Prompt Engineering
+Recommended background: has used any LangChain-related package, or regularly uses AI development tools such as Claude Code / Cursor. Knows git. Can run commands in the VS Code terminal.
+6. Pre-workshop preparation
+Before the first session, students need to complete:
+Software and environment: no specific operating system required. They need to install the Claude Code CLI or an editor compatible with the skills standard, plus a Python 3.10+ environment. Download an IDE that suits you (VS Code preferred). Should we mainly require everyone to buy Claude Code? Keep the status quo for now (research opencode).
+Accounts or API: apply for an Anthropic or OpenAI API Key. For details, we need to see whether the AI society can provide enough API usage.
+Hardware and cost: no GPU needed, an ordinary laptop is enough. There may be a small API call cost (about NT$150 - 300).
+Estimated preparation time: 60 minutes (finishing environment setup and API binding).
+Software and environment
+Operating system restriction: none. Please install VS Code.
+Tools to install: VS Code is required; optionally any vibe-coding tool (a paid and a free option will be provided before class; paid is recommended)
+Accounts or APIs to apply for: same as above; we suggest buying one month of Claude Code for NT$600
+Whether to buy Claude Code or Codex: same as above
+Is a GPU needed: V Not needed  □ Recommended  □ Required
+Any extra cost: □ No  V Possibly, about NT$600 if buying Claude Code / Codex, or about NT$150~300 in direct API mode? But buying Codex and the like is still better
+7. Course schedule
+Session 1: LangGraph - Putting reins on a wild horse
+Goal:
+Goal: break the myth that "AI will figure it out by itself", and build an understanding of deterministic workflows.
+Main content:
+Introduce why enterprises in 2026 still rely on Graph architectures
+Hands-on: define State, build Nodes, and configure Conditional Edges
+Explore how, without a framework, the AI would mess things up.
+In-class practice:
+Build a basic review-Agent framework that requires finishing A before doing B.
+Progress after class:
+Be able to run a deterministic workflow on your own computer, going from shallow to deep
+Session 2: Agent Skills - Markdown magic and the price of hallucination
+Goal:
+Understand the nature of Agent Skills and the open standard (agentskills.io), and learn to package personal Domain Knowledge
+Main content:
+Dissect SKILL.md's three-stage progressive disclosure system (Metadata -> Instructions -> Resources).
+Discuss why this seemingly smart mechanism easily produces serious security risks and hallucinations when it lacks review.
+Download a SKILL.md, and write your own SKILL.md (vibe coding is fine)
+In-class practice:
+Write a practical custom Skill (for example data organizing or copy styling), and test the trigger conditions locally.
+Progress after class: you can try building with more API keys on your own
+
+
+Session 3 (optional): Dual-core Agent practice - dancing freely inside the framework
+Goal:
+Integrate the techniques of the first two sessions and complete the final project.
+Main content and practice:
+Embed the Skills written in Session 2 as Tools into the LangGraph nodes from Session 1. In the second half, do group demos and peer Code Review. The instructor will give consulting and critical suggestions on architecture design.
+8. Teaching method
+Planned teaching formats: lecture and concept explanation, Live Coding, group practice, project consulting.
+Planned lecture-to-practice ratio: lecture 40% / practice 60%.
+Support: Code Review at any time, and guiding students to observe the Trace log when the Agent makes errors, instead of giving the standard answer directly.
+9. Recruitment and headcount planning
+Suggested number of participants:
+Minimum 10 / ideal 15 / cap 25 ~ no cap
+Registration method:
+□ First come, first served
+V Confirmed by prerequisite ability
+□ Confirmed by motivation
+□ Pre-class assignment required
+□ Other: ________
+Suggested questions on the registration form:
+Programming or technical background
+Whether they have the required background
+Motivation for joining the workshop
+Whether they can attend all sessions
+Whether they have finished installing the environment
+Other: Describe one time when an AI tool (such as ChatGPT/Claude) helped you write code but made things worse or over-imagined, and how you solved it at the time. (It's fine if you have none)
+This form is mainly used to confirm how well the course fits and the state of preparation. In principle it is not a highly competitive screening mechanism.
+10. Required resources
+Venue requirements:
+A classroom is enough
+Hardware requirements:
+V An ordinary laptop is enough
+□ GPU needed
+□ Cloud computing resources needed
+□ Specific equipment needed
+□ Other: ________
+Resources the club needs to help provide:
+V Classroom (what kind of classroom?)
+□ GPU or cloud credits
+V API credits  IF any
+V Teaching assistants
+□ Printed materials
+□ Publicity and registration
+□ Other: ________
+11. Possible risks and backup plans
+Possible problem
+Prevention or backup plan
+Students fail to install the environment
+Provide a standard environment, Colab, or a pre-configured example
+Students' levels differ too much
+Set a minimum prerequisite, and provide advanced challenge questions
+API or service temporarily fails
+Prepare offline data and pre-recorded results
+Workshop falls behind schedule
+Separate required content from extension content
+Other: ____
+____________
+
+12. Feedback the proposers hope to get
+What we most hope everyone can help confirm:
+□ Whether the topic is suitable
+□ Whether the course scope is too large
+□ Whether the number of sessions is reasonable
+□ Whether the prerequisites are appropriate
+□ Whether the hands-on content is feasible
+□ Whether the technical environment is likely to cause problems
+□ Whether a co-instructor or teaching assistants are needed
+□ Other: ________
+Things that are not yet decided:
+________________________________
+
+30-second proposal summary
+What we want to teach: how to integrate the LangGraph framework with absolute determinism, and the newest and trendiest, highly autonomous Agent Skills (SKILL.md) standard of 2026.
+Who it is for: people with basic Python ability who are fed up with AI always being "too helpful" and messing up their Code, and who want to truly control their AI workflow.
+What students will finish: a hybrid AI assistant Repository combining graph state management and Markdown skill packages.
+What we expect to need: 3 sessions, 25 students, and a classroom with plenty of power sockets.

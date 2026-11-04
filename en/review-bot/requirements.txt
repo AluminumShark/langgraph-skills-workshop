@@ -1,0 +1,11 @@
+# Packages the Homework Helper needs in the cloud (version ranges match the notebooks)
+langgraph>=1.1,<2
+langchain>=1.2,<2
+langchain-google-genai>=4,<5
+langgraph-checkpoint-sqlite>=3,<4
+# MCP: pin the two together, because mismatched versions fail to import
+mcp>=1.20,<2
+langchain-mcp-adapters>=0.3,<0.4
+fastapi>=0.115
+uvicorn>=0.30
+# Add this when production switches SQLite to Postgres: langgraph-checkpoint-postgres

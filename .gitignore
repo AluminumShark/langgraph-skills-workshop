@@ -19,3 +19,17 @@ review-bot/作業.py
 review-bot/.env
 review-bot/deploy/*.log
 review-bot/deploy/.mcp_port
+
+# English edition (en/): the same generated and runtime files
+en/notebooks/*.executed.ipynb
+en/review-bot/history.jsonl
+en/review-bot/checkpoints.sqlite*
+en/review-bot/.llm.json
+en/review-bot/**/*.sqlite*
+en/review-bot/deploy/.port
+en/review-bot/outbox.txt
+en/review-bot/2B_results.json
+en/review-bot/homework.py
+en/review-bot/.env
+en/review-bot/deploy/*.log
+en/review-bot/deploy/.mcp_port

@@ -44,6 +44,12 @@ NTU AI Club 工作坊，對象是剛學會 Python 的初學者，兩堂各 120 �
 - 2-D 明示本 notebook 使用預設手冊。區分未完成 thread 續跑、完成 thread 取回結果、新 thread 全新執行。列出歷史紀錄不是 Replay。
 - 每本提供存檔、zip 下載與歷程輸出。收尾的歷程只代表已執行的格子，不暗示完成全部實驗。
 
+## 英文版（en/）
+
+- en/ 鏡像整個 repo 的英文版；中文檔是主要來源，修改中文來源時同步更新 en/ 對應檔。
+- 跨檔名稱、協定字串、投影片標題與用語以 en/GLOSSARY.md 為準；出現新的跨檔名稱時先補進 glossary。
+- en/notebooks/*.ipynb 由 uv run python en/scripts/build_notebooks.py 產生；驗證改用 en/scripts/ 與 en/tests/ 下的對應指令（見 en/CLAUDE.md）。
+
 ## 修改與驗證
 
 1. 修改前確認工作樹，必要時先 git pull 取得講師從 Colab 存回的版本；不要覆蓋未提交變更。

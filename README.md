@@ -2,6 +2,8 @@
 
 > Agents in 2026: Mastering LangGraph & SKILL.md
 
+🌐 **English edition**：[en/README.md](en/README.md)（投影片、notebook、範例程式與文件的完整英文版）
+
 這是 **NTU AI Club** 的技術工作坊教材，講者是 李維（Levi, [@AluminumShark](https://github.com/AluminumShark)）和柯宥圻。
 課程對象是**剛學會 Python 的初學者**：只要看得懂 dict、函式、if、while 就跟得上。
 你不用自己寫程式，全程都在 Google Colab 上執行講師準備好的 notebook，
