@@ -1,8 +1,8 @@
 # Saved Notebook Output vs. the Slides
 
-## Latest Colab-saved version: d2c81b7
+## Latest Colab-saved version: f39e589
 
-After another pull on 2026-11-03, the new commits only updated the output of 2-B and 2-E. All eight notebooks are valid in format, and the saved output contains no error cells. All program sources are identical to 12235d3, which already passed the 19 tests and the eight-notebook flow check. So this round did not regenerate any notebook and did not overwrite any Colab result.
+After another pull on 2026-11-03, the new commits only updated the output of 2-B and 2-E. All eight notebooks are valid in format, and the saved output contains no error cells. All program sources are identical to 2f715ff, which already passed the 19 tests and the eight-notebook flow check. So this round did not regenerate any notebook and did not overwrite any Colab result.
 
 | Notebook | Cells with output / code cells | Match with the slides |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ Slide 35 (s2-037, "Verifying feedback: rules first, then independent judgment") 
 
 ## Previous full review and fix log
 
-Review date: 2026-11-03. This round was based on `2aabc81` on GitHub `main`. Three subagents split up the work of cross-checking the eight notebooks, using the Colab output that was really saved. We did not fill anything in with local fake-model output.
+Review date: 2026-11-03. This round was based on `a06d050` on GitHub `main`. Three subagents split up the work of cross-checking the eight notebooks, using the Colab output that was really saved. We did not fill anything in with local fake-model output.
 
 The table below describes the real-output snapshot before the fixes. The program fixes and the new-version verification from this round are listed separately further down. These records do not mean the user never ran the experiments that lack output. Cell indexes start from 0. "Has output" also counts file writes, downloads, and prompt messages, so it cannot be used directly as a completion rate for the experiments.
 
@@ -78,7 +78,7 @@ This round fixed the three items above, and strengthened the baseline / after-ch
 
 ## Confirmed reason for the reduced output, and the recovery
 
-Git history proves that these three notebooks used to have full output: commit `8d4b4b3` has 9/9 for 1-0, 18/18 for 1-B, and 11/11 for 2-A. After the course material was edited, commits `1d5246d` and `5653194` rebuilt the notebooks. The generator only keeps output for code cells with exactly the same source, so the cells that were changed became blank. This is not evidence that the user did not run or save them.
+Git history proves that these three notebooks used to have full output: commit `5e1a3f1` has 9/9 for 1-0, 18/18 for 1-B, and 11/11 for 2-A. After the course material was edited, commits `6d85588` and `0885d26` rebuilt the notebooks. The generator only keeps output for code cells with exactly the same source, so the cells that were changed became blank. This is not evidence that the user did not run or save them.
 
 The three original notebooks have been fully restored to [output-history](../notebooks/output-history/README.md). They include the code at the time, the forms, the real output, and the execution counts, and they are byte-identical to the original commits. The latest notebooks do not attach historical output that no longer matches.
 
