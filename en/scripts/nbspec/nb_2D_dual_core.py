@@ -18,7 +18,7 @@ def cells():
 
         {badge(NAME)}
 
-        > 📍 **Matching slides**: Session 2, "Stop 3: Security and integration", slides **25-28**; optional **43-44** (class time 1:08-1:23, about 15 minutes)
+        > 📍 **Matching slides**: Session 2, "Stop 3: Security and integration", slides **25-28**; optional **43-44** (class time 1:08-1:23)
         """),
         project_intro("Connect the helper's workflow, agent, handbooks and scripts into one helper that combines a fixed workflow with an agent, and that can resume after an interruption."),
         md("""
@@ -41,14 +41,14 @@ def cells():
         - Finally, a **checkpointer** (automatic saving) and a **thread_id** (the number of a save) store the **State** after every step (the "order slip" passed between stations, a dict):
           if a run is interrupted, it can continue.
 
-        | Part | What you'll see | Time | Matching slides |
-        | --- | --- | --- | --- |
-        | Part 1 | Write `dual_core.py` and draw the combined flow chart | 2 min | 25-26 |
-        | Part 2 | **Demo**: run the whole thing once; the outer flow goes station by station, and the agent inside picks its own tools | 3 min | 25-26 |
-        | Part 3 | **Experiment**: interrupt; stop halfway and save the State to the checkpoint | 2 min | 27 |
-        | Part 4 ⭐ | **Experiment**: resume with the same thread_id, or start from blank with a different thread_id | 5 min | 27-28 |
-        | Part 5 | **Inspect**: the State history of one thread (one save per step) | 2 min | 28 |
-        | Part 6 | Optional: use a separate pure agent for an eval and compare prompt versions; record the pass rate | - | 43-44 |
+        | Part | What you'll see | Matching slides |
+        | --- | --- | --- |
+        | Part 1 | Write `dual_core.py` and draw the combined flow chart | 25-26 |
+        | Part 2 | Run the whole thing once: the outer flow goes station by station, and the agent inside picks its own tools | 25-26 |
+        | Part 3 | Interrupt: stop halfway and save the State to the checkpoint | 27 |
+        | Part 4 ⭐ | Resume: with the same thread_id, or start from blank with a different thread_id | 27-28 |
+        | Part 5 | The State history of one thread (one save per step) | 28 |
+        | Part 6 | Optional: eval, compare prompt versions of a pure agent; record the actual pass rate | 43-44 |
 
         ## How to use it
 
@@ -57,8 +57,7 @@ def cells():
            Optional: to use the handbook you changed in 2-A, finish Parts 1-4 first, then open `/content/review-bot/skills/friendly-feedback/SKILL.md` in the left "Files" panel,
            paste in the content you backed up and save it (don't re-run "0. Setup" afterward, or it will be overwritten), and then re-run from Part 2 with a brand-new thread_id.
         3. The setup and prepare cells overwrite the handbooks, scripts and code in them, so keep any changes you made yourself; they do not delete an existing SQLite checkpoint.
-        4. Each part: **🤔 write your prediction → ▶ run → 👀 compare**; in Parts 3 and 4, look at the checkpoint state before you act; to run an experiment again, use a thread_id you have never used.
-        5. **Class pace**: about 15 minutes for Parts 1-4, a quick look at the history in Part 5, and Part 6 (eval) is optional after class.
+        4. Each part: **🤔 write your prediction → ▶ run → 👀 compare**; in Parts 3 and 4, look at the checkpoint state before you act; to run an experiment again, use a thread_id you have never used. Class takes about 15 minutes: finish Parts 1-4 first, take a quick look at the history in Part 5, and leave Part 6 for after class.
         """),
         setup(NAME, support=SUPPORT),
         md("""
@@ -97,11 +96,11 @@ def cells():
         """),
         md(f"""
         ---
-        ## Part 2: **Demo**: run the whole thing once
+        ## Part 2: Run the whole thing once
 
         > 📍 **Matching slides**: slide 25 "Combining workflow and agent: wiring handbooks and tools"
 
-        The last part only drew the chart. In this part the instructor demonstrates a real run of the whole flow. The output prints station by station: the name after `▶` is the station, and the indented lines below it are the fields that station wrote into the State.
+        The last part only drew the chart. In this part we really run it once. The output prints station by station: the name after `▶` is the station, and the indented lines below it are the fields that station wrote into the State.
 
         There are three kinds of outcome in this course. Please keep "ended" and "succeeded" apart:
 
@@ -156,11 +155,11 @@ def cells():
         """),
         md("""
         ---
-        ## Part 3: **Experiment**: interrupt, stop halfway
+        ## Part 3: Interrupt, stop halfway
 
         > 📍 **Matching slides**: slide 27 "Pause once, then resume with the same ID"
 
-        Part 2 ran all the way through. But in the real world connections drop and programs crash. In this part you run it yourself and stop it halfway on purpose, to see whether the State was saved.
+        Part 2 ran all the way through. But in the real world connections drop and programs crash, so this part stops halfway on purpose, to see whether the State was saved.
 
         A **checkpointer** saves the whole order slip (the State) each time a station finishes; a **thread_id** is the number of that save, like a locker number.
         The saves live in the file `/content/review-bot/checkpoints.sqlite`. As long as that file exists, re-running a cell can read them back. Colab may delete or replace the runtime and remove local files; if the file is gone, there is no old checkpoint.
@@ -203,19 +202,18 @@ def cells():
         """),
         md(f"""
         ---
-        ## Part 4 ⭐: **Experiment**: resume, or start from blank?
+        ## Part 4 ⭐: Resume, or start from blank?
 
-        > 📍 **Matching slides**: slides 25-28; minimum to complete: tell apart resuming an unfinished thread, retrieving a finished result, and a fresh run on a new ID
+        > 📍 **Matching slides**: slides 27-28; minimum to complete: tell apart resuming an unfinished thread, retrieving a finished result, and a fresh run on a new ID
 
-        The last part stopped halfway and left an "unfinished" State in the checkpoint. In this part you use the thread_id to look for a checkpoint:
+        The last part stopped halfway and left an "unfinished" State in the checkpoint. This part uses the thread_id to look for a checkpoint:
         if it finds one stopped halfway, it **resumes**; if it is already finished, it **only reads the existing result**; only a brand-new ID **starts from blank**.
-        Slide 25 has a table that compares these three cases.
 
-        | ID status | What it does | Re-reads this cell's homework fields? | Slide |
-        | --- | --- | --- | --- |
-        | Old ID, not finished | Continues with the pending node | No, uses the homework in the checkpoint | 27 |
-        | Old ID, finished | Shows the finished result | No, does not review again | 28 |
-        | A new ID never used | Starts from check_syntax | Yes | 25 |
+        | ID status | What it does | Re-reads this cell's homework fields? |
+        | --- | --- | --- |
+        | Old ID, not finished | Continues with the pending node | No, uses the homework in the checkpoint |
+        | Old ID, finished | Shows the finished result | No, does not review again |
+        | A new ID never used | Starts from check_syntax | Yes |
 
         ### 🤔 Prediction questions (three rounds; write the answers on paper)
 
@@ -270,12 +268,11 @@ def cells():
         """),
         md("""
         ---
-        ## Part 5: Inspect the run history: the State history of one thread
+        ## Part 5: The State history of one thread
 
         > 📍 **Matching slides**: slide 28 (look at the State history after the run finishes)
 
         Part 4 looked at the "latest" checkpoint. In fact the checkpointer **saves one checkpoint every time a station finishes**, and the cell below lists every checkpoint of the same thread_id.
-        This is **viewing the State history**; it does not re-run any node. Replay (re-running from a specific checkpoint) is an advanced operation that this notebook does not demonstrate.
 
         ### 🤔 Prediction question
         Find which checkpoint first has skill_name and which first has feedback. The number of rewrites affects the number of checkpoints.
@@ -305,24 +302,23 @@ def cells():
         ### 👀 What did you see?
 
         - Every time a station finishes, one more checkpoint appears, so you can watch the order slip fill in field by field. It is much like 1-A printing the whole order slip step by step, except this time it is **stored in a file**.
-        - This cell is **viewing history**; it does not re-run any node.
+        - This cell is **viewing history**; it does not re-run any node. Replay (re-running from a specific checkpoint) is a different operation that this notebook does not demonstrate.
         """),
         md("""
         ---
-        ## Part 6 (optional): Eval: compare using a separate pure agent
+        ## Part 6 (optional): Evals: how do you write "what it should do" as rules that code can check?
 
         > 📍 **Matching slides**: optional slide 43 "Optional: checking a pure agent with code", 44 "Optional: a fixed test set, before vs. after a change"
 
-        This part **uses a different, pure agent for testing**, not the integrated helper from Parts 1-5.
-        A pure agent has no outer flow control; it decides on its own whether to check syntax first and which tools to call. How do you check how well it does? **Test it.**
+        This appendix switches to a different system: a **pure agent**, not the integrated helper from Parts 1-5; it puts check_syntax into its optional toolbox too. Without an outer flow, how do you know whether it follows the rules? The answer is **test it**.
 
         Writing "what the agent should do" as a test that code can grade automatically is called an **eval**. Here are five test cases (eval cases),
         each tied to its own assignment requirements, so the average assignment never reads the addition spec. Each case checks two things: **which tool is called first** and **which words the final reply must contain**. Code grades the test, not a person. We compare two versions of the system prompt:
 
         - **baseline** (the original version, used as the reference point): says nothing special about order
-        - **v2** (the improved version): adds one sentence, "always call check_syntax before giving feedback" (here `check_syntax` is the helper's syntax check wrapped as a tool)
+        - **v2**: adds one sentence, "always call check_syntax before giving feedback" (here `check_syntax` is the helper's syntax check wrapped as a tool)
 
-        Note: this "eval" tests an agent with test cases. It is different from the "verifying agent" on Session 2 slide 35 (which checks whether each piece of feedback makes things up). The form field "run_verification" means whether to run this eval.
+        The "eval" here sets test cases for an agent, and it is a different thing from the "verifying agent" on Session 2 slide 35 that checks each piece of feedback. The form field "run_verification" means whether to run this eval.
 
         ⚠️ This part calls the model about 20-30 times. If your free quota is small, **run it after class**: tick "run_verification" in the form and run the cell.
 
@@ -399,8 +395,8 @@ def cells():
 
         - First write down how many cases baseline and v2 each passed, and why the others failed. Baseline may pass all of them; record what you actually saw.
         - v2 may improve, stay the same or get worse; one run of five cases only describes this test. Matching a keyword does not mean the feedback is correct, so you still need to spot-check the content by hand.
-        - This is an **eval of a pure agent**. Compare it with the **integrated** helper in Parts 1-5, which writes the "check order" into the outer flow and the "format rule" into the `check_format` node,
-          so that code runs the required checks along its branches (a syntax error never enters feedback; the format is checked only after the syntax passes). The integrated helper still needs testing of its branches, its limit, checkpoint resuming and the quality of its feedback, which a plain eval cannot test.
+        - One step further: write "the first call must be check_syntax" directly as the **order of the outer flow**, and "there must be strengths and improvements" as a `check_format` node,
+          so the flow runs the required checks along its branches: a syntax error does not enter feedback or the format check; feedback is format-checked only after the syntax passes. The checks themselves are decided by code. The integrated helper still needs testing of its branches, its limit, checkpoint resuming and the quality of its feedback; it is not exempt from evals.
         """),
         *ending(),
     ]

@@ -20,29 +20,24 @@ def cells():
         The helper's handbooks (Skills) can be written by you, or downloaded from the internet from someone else: after downloading, you still need to check the contents first, and then a supporting program loads it.
         **The problem: a model may treat a malicious instruction mixed into a handbook as part of the task.** What if someone slips one bad instruction into a handbook?
 
-        This notebook is an experiment: a chain of cause and effect that starts at "reading the handbook".
-        There is a handbook called "detailed feedback" that looks much like a normal handbook, but hides a suspicious instruction when used.
-        Your job is to **find that line in the handbook, try whether a tool will carry it out, and see whether it affects the AI's feedback**.
-        This notebook introduces one term: **prompt injection** (hiding instructions in text the AI reads, to trick it into obeying).
+        This notebook is an experiment: there is a handbook called "detailed feedback" that looks much like a normal handbook, and using it may ask for actions unrelated to grading.
+        Your job is to **find the line in the handbook that hides an instruction**. This notebook introduces one term: **prompt injection** (hiding instructions in text the AI reads, to trick it into obeying).
 
         > 🔒 The key used here is fake (`{FAKE_KEY}`). The read tool returns only a fixed fake value and never looks up real environment variables. `setup.sh` is never executed, from start to finish.
 
-        | Part | What you do | Time | Matching slides |
-        | --- | --- | --- | --- |
-        | Part 1 | Write the third handbook, "detailed feedback", and the `setup.sh` it ships | 2 min | 22 |
-        | Part 2 | **Same handbook and homework; compare with and without the tool that reads the fake key** | 3 min | 22-23 |
-        | Part 3 | **Read the handbook line by line and find the line that hides an instruction** | 5 min | 23 |
-        | Part 4 (optional) | Scan the whole Skill folder with code (turn the habit into a checkpoint) | - | 24 |
-        | Part 5 (optional reading) | Supplementary: study numbers and tool limits | - | 24 |
-
-        > Class takes about **10 minutes** and covers Parts 1-3; Parts 4 and 5 are optional after class. To keep the pace, the `setup.sh` analysis in the second half of Part 3 is also optional.
+        | Part | What you do | Matching slides |
+        | --- | --- | --- |
+        | Part 1 | Write the third handbook, "detailed feedback", and the `setup.sh` it ships | 22 |
+        | Part 2 | Same handbook and homework; compare with and without the tool that reads the fake key | 22-23 |
+        | Part 3 | Read the handbook line by line and find the line that hides an instruction | 23 |
+        | Part 4 (optional) | Scan the whole Skill folder with code (turn the habit into a checkpoint) | 24 |
+        | Part 5 (optional reading) | Supplementary: study numbers and tool limits | 24 |
 
         ## How to use it
 
         1. Run **"0. Environment setup"** first.
         2. You **do not edit code** in this notebook. The required in-class work is locating the problem in the handbook in Parts 1-3 (filling in a line number in Part 3). The `setup.sh` reading in the second half of Part 3, the Part 4 scanner, and the Part 5 research details are optional after class.
         3. Every part: **🤔 write a prediction first → ▶ run → 👀 compare**. If the runtime is rebuilt, rerun the environment setup and Part 1 first, then return to your current part. The environment setup and `%%writefile` overwrite the default files in them; this notebook does not need you to edit a handbook, but if you changed one, keep it first.
-        4. If during a run the model does not call the read tool, or a particular feedback does not appear, record "did not happen this time" honestly; **you do not need to rerun until the expected result appears**.
         """),
         setup(NAME, support=["tools/__init__.py", "tools/run_code.py", "tools/check_indent.py",
                              "tools/read_spec.py", "agent.py", "spec.md", "skill_loader.py",
@@ -209,7 +204,7 @@ def cells():
         3. **Confirm the source and version**: pick trustworthy sources and record the version; read the contents even for official sources.
 
         **Done when: you point out the suspicious line, explain what it asks for, and say what removing the tool changed.**
-        Class stops here. The setup.sh details, the scanner, and the research numbers below are all optional after class.
+        Class stops here. The shell, the scanner, and the research numbers below are all optional after class.
         """),
         md("""
         ### Optional after class: `setup.sh`
