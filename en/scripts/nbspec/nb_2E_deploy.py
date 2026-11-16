@@ -19,7 +19,7 @@ def cells():
 
         {badge(NAME)}
 
-        > 📍 **Matching slides**: Session 2, Stop 4, slide **37** "The Homework Helper's full division of labor", slide **48** "The division of labor in the cloud: where each box lives", and "Supplementary: moving to the cloud", slides **47-55** (self-study after class)
+        > 📍 **Matching slides**: Session 2, Stop 4, slide **38** "The Homework Helper's full division of labor", slide **49** "The division of labor in the cloud: where each box lives", and "Supplementary: moving to the cloud", slides **48-56** (self-study after class)
         """),
         project_intro("Run a simplified version of Session 2's division-of-labor diagram once (MCP, workflow, reviewer agent, verifying agent, human confirmation; this version has no assignment attachment and no read_spec), then see where each piece lives once it goes to the cloud."),
         md("""
@@ -34,16 +34,16 @@ def cells():
         | Tool | A Python function the AI can call | `check_naming` (checks naming), `run_code` (runs the homework) |
         | MCP | A standard socket for plugging in "tools that live in another program or service" | The homework repo: fetch homework, send email |
         | Handbook (Skill) | A work handbook for the AI to read | `friendly-feedback` (friendly feedback) |
-        | Reviewer agent and verifying agent | The reviewer agent is one configuration run once per submission with that submission's own input (batching, not opening more roles), each on a clean "desk" (its own conversation history); the verifying agent is a second role whose job is separate: it only checks and never writes | The reviewer agent (= the feedback agent on slide 37) uses `friendly-feedback`; the verifying agent is called the "auditor" in the code |
+        | Reviewer agent and verifying agent | The reviewer agent is one configuration run once per submission with that submission's own input (batching, not opening more roles), each on a clean "desk" (its own conversation history); the verifying agent is a second role whose job is separate: it only checks and never writes | The reviewer agent (= the feedback agent on slide 38) uses `friendly-feedback`; the verifying agent is called the "auditor" in the code |
 
         In class we only drew the diagram. This notebook **actually runs it once**, entirely inside free Colab:
 
         | Exercise | What you'll do | Matching slides |
         | --- | --- | --- |
-        | Exercise 1 | Start a **real MCP server**, the "homework repo": connect to it through a local socket first, then turn it into a URL (remote MCP) | 48, 52 |
-        | Exercise 2 | ⭐ **Review one first, then run the whole batch**: MCP fetches the homework → Send dispatches each submission → each one gets a syntax check first, and only those that pass go on to the review and the verification agent → stop and wait for a person to confirm before sending → MCP sends the emails | 31, 34-37, 48, 53-54 |
-        | Exercise 3 | Wrap it as an **API service**: start a review by URL, confirm the sending by URL; the thread_id is kept across requests | 48, 49, 51, 54 |
-        | Exercise 4 | **Pre-launch checks**, and generate the deployment files (`Dockerfile`, `langgraph.json`) | 49-50, 55 |
+        | Exercise 1 | Start a **real MCP server**, the "homework repo": connect to it through a local socket first, then turn it into a URL (remote MCP) | 49, 53 |
+        | Exercise 2 | ⭐ **Review one first, then run the whole batch**: MCP fetches the homework → Send dispatches each submission → each one gets a syntax check first, and only those that pass go on to the review and the verification agent → stop and wait for a person to confirm before sending → MCP sends the emails | 32, 35-38, 49, 54-55 |
+        | Exercise 3 | Wrap it as an **API service**: start a review by URL, confirm the sending by URL; the thread_id is kept across requests | 49, 50, 52, 55 |
+        | Exercise 4 | **Pre-launch checks**, and generate the deployment files (`Dockerfile`, `langgraph.json`) | 50-51, 56 |
 
         **This notebook does not deploy anything to the cloud** (that needs a cloud account and a credit card). The MCP server and the API service run on this one Colab machine,
         and the emails are fake; they are only written to `/content/review-bot/outbox.txt`.
@@ -81,7 +81,7 @@ def cells():
         ---
         ## Exercise 1: Start a real MCP server
 
-        > 📍 **Matching slides**: slide 48 (deployment map), 52 (remote MCP); Session 1 slide 39 (MCP sockets)
+        > 📍 **Matching slides**: slide 49 (deployment map), 53 (remote MCP); Session 1 slide 39 (MCP sockets)
 
         First build the "someone else's service" box from the diagram. An MCP tool lives in **another program**. The next cell writes `deploy/homework_mcp.py`: it is an ordinary Python file,
         and the `@mcp.tool()` on top of three functions turns them into tools that can be plugged in through the socket:
@@ -170,7 +170,7 @@ def cells():
         ---
         ## Exercise 2 ⭐: Run the whole division-of-labor diagram once
 
-        > 📍 **Matching slides**: slide 31 "Feature 1: fetching homework from GitHub", 34 "Reviewing 200 submissions: independent first, then parallel", 35 "Verifying feedback: rules first, then independent judgment", 36 "Before sending email, make the flow wait for confirmation", 37 "The Homework Helper's full division of labor", 48 "The division of labor in the cloud: where each box lives", 53 "Reviewing 200 at once: Send", 54 "Waiting for confirmation before sending: interrupt"
+        > 📍 **Matching slides**: slide 32 "Feature 1: fetching homework from GitHub", 35 "Reviewing 200 submissions: independent first, then parallel", 36 "Verifying feedback: rules first, then independent judgment", 37 "Before sending email, make the flow wait for confirmation", 38 "The Homework Helper's full division of labor", 49 "The division of labor in the cloud: where each box lives", 54 "Reviewing 200 at once: Send", 55 "Waiting for confirmation before sending: interrupt"
 
         Exercise 1 started the homework repo, and this exercise uses it to run a simplified version of the diagram once. The next cell writes `deploy/multi_agent.py`; this version has no assignment attachment and no `read_spec`:
 
@@ -178,15 +178,15 @@ def cells():
         | --- | --- | --- |
         | Fetch homework from the homework repo | MCP (called by the **code**, no judgment needed) | The `fetch_homework` node calls `list_homework` and `get_homework` |
         | Always check syntax first | Code | On a syntax error it replies directly and **does not call the AI** |
-        | Review each submission once | The same reviewer agent (= the feedback agent on slide 37) + Skill + script: batching, not opening more roles | `Send` dispatches each submission to `review_one`; the handbook is `friendly-feedback`, and the tools are `check_naming` and `run_code` |
-        | Check the feedback for made-up claims | The verifying agent (a separate checking job, called the "auditor" in the code) + code | Code checks the line numbers first, then the auditor reads the content; a failure is sent back for at most one rewrite; if it still fails, the failed state is kept. The auditor gets only the original homework and the feedback, with **no assignment requirements**, so it cannot judge whether the assignment was misunderstood (slide 35's full design needs the assignment + homework + draft) |
+        | Review each submission once | The same reviewer agent (= the feedback agent on slide 38) + Skill + script: batching, not opening more roles | `Send` dispatches each submission to `review_one`; the handbook is `friendly-feedback`, and the tools are `check_naming` and `run_code` |
+        | Check the feedback for made-up claims | The verifying agent (a separate checking job, called the "auditor" in the code) + code | Code checks the line numbers first, then the auditor reads the content; a failure is sent back for at most one rewrite; if it still fails, the failed state is kept. The auditor gets only the original homework and the feedback, with **no assignment requirements**, so it cannot judge whether the assignment was misunderstood (slide 36's full design needs the assignment + homework + draft) |
         | Send the email | MCP + human confirmation | `interrupt()` stops, and only after a person decides is `send_email` called; choosing "Send none" ends the run right there |
 
         Two new pieces of syntax in the table:
         - `Send`: sends each item of a list to the `review_one` node, so they can be handled at the same time. The node checks syntax first and creates a reviewer agent only if it passes.
         - `interrupt()`: when the flow gets here it stops, saves the State, and waits for a person to answer before it continues.
 
-        The flow chart has only four stations (fetch_homework → review_one → confirm_before_send → send_emails); the syntax check, the review and the verification are all written inside the `review_one` node, run once per submission (slide 37 draws them as separate boxes). When you choose "Send none", the flow ends straight from `confirm_before_send` without entering `send_emails`.
+        The flow chart has only four stations (fetch_homework → review_one → confirm_before_send → send_emails); the syntax check, the review and the verification are all written inside the `review_one` node, run once per submission (slide 38 draws them as separate boxes). When you choose "Send none", the flow ends straight from `confirm_before_send` without entering `send_emails`.
 
         Note "don't pass the work along three people": one submission, from review to fix, is handled by the **same reviewer**; the semantic judgment goes to a separate agent whose only job is to check; independent checking can still miss errors.
 
@@ -281,7 +281,7 @@ def cells():
         ---
         ## Exercise 3 (advanced, optional): Wrap it as an API service
 
-        > 📍 **Matching slides**: slide 48 (the API box), 49 "Leaving Colab: three things to replace", 51 "Optional reading: choose a deployment by operational needs", 54 "Waiting for confirmation before sending: interrupt"
+        > 📍 **Matching slides**: slide 49 (the API box), 50 "Leaving Colab: three things to replace", 52 "Optional reading: choose a deployment by operational needs", 55 "Waiting for confirmation before sending: interrupt"
 
         In Exercise 2 you pressed ▶ in a notebook. In the cloud, nobody presses a notebook's ▶: a staff member presses "Start review" and "Confirm sending" on a back-office web page,
         and that page calls your service over **HTTP** (the same set of rules a browser uses to open a web page). This kind of interface, which lets another program ask you to do things through a URL, is called an **API**.
@@ -392,7 +392,7 @@ def cells():
         ---
         ## Exercise 4 (advanced, optional): Pre-launch checks, and generating the deployment files
 
-        > 📍 **Matching slides**: slide 49 (keys go in Secret Manager), 50 (langgraph.json is the packing slip), 55 "After launch: observable and containable"
+        > 📍 **Matching slides**: slide 50 (keys go in Secret Manager), 51 (langgraph.json is the packing slip), 56 "After launch: observable and containable"
 
         The last step: before really going to the cloud, check everything with code, then prepare the files to ship.
         The cells below write the files needed for the cloud (**they only generate files; nothing is packaged or deployed**):

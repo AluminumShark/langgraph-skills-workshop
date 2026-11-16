@@ -18,7 +18,7 @@ def cells():
 
         {badge(NAME)}
 
-        > 📍 **Matching slides**: Session 2, "Stop 3: Security and integration", slides **25-28**; optional **43-44** (class time 1:08-1:23)
+        > 📍 **Matching slides**: Session 2, "Stop 3: Security and integration", slides **25-29**; optional **44-45** (class time 1:08-1:23)
         """),
         project_intro("Connect the helper's workflow, agent, handbooks and scripts into one helper that combines a fixed workflow with an agent, and that can resume after an interruption."),
         md("""
@@ -45,10 +45,10 @@ def cells():
         | --- | --- | --- |
         | Part 1 | Write `dual_core.py` and draw the combined flow chart | 25-26 |
         | Part 2 | Run the whole thing once: the outer flow goes station by station, and the agent inside picks its own tools | 25-26 |
-        | Part 3 | Interrupt: stop halfway and save the State to the checkpoint | 27 |
-        | Part 4 ⭐ | Resume: with the same thread_id, or start from blank with a different thread_id | 27-28 |
-        | Part 5 | The State history of one thread (one save per step) | 28 |
-        | Part 6 | Optional: eval, compare prompt versions of a pure agent; record the actual pass rate | 43-44 |
+        | Part 3 | Interrupt: stop halfway and save the State to the checkpoint | 27-28 |
+        | Part 4 ⭐ | Resume: with the same thread_id, or start from blank with a different thread_id | 28-29 |
+        | Part 5 | The State history of one thread (one save per step) | 29 |
+        | Part 6 | Optional: eval, compare prompt versions of a pure agent; record the actual pass rate | 44-45 |
 
         ## How to use it
 
@@ -64,7 +64,7 @@ def cells():
         ---
         ## Part 1: How the workflow and the agent fit together
 
-        > 📍 **Matching slides**: slide 25 "Combining workflow and agent: wiring handbooks and tools", slide 26 "Where workflow meets agent: load the handbook, provide the tools"
+        > 📍 **Matching slides**: slide 25 "Combining workflow and agent: wiring handbooks and tools", slide 26 "Connecting the workflow, handbooks and tools"
 
         First look at the combined flow chart. The next cell writes `dual_core.py` (no changes needed; just run it).
         The file name `dual_core` is an old name. It means slide 25's "combining workflow and agent", the "dual-core" in the course title. If you want to read the code, look at three places:
@@ -157,7 +157,7 @@ def cells():
         ---
         ## Part 3: Interrupt, stop halfway
 
-        > 📍 **Matching slides**: slide 27 "Pause once, then resume with the same ID"
+        > 📍 **Matching slides**: slide 27 "Why save checkpoints: what if a review stops halfway?", 28 "Hands-on: pause first, then resume with the same ID"
 
         Part 2 ran all the way through. But in the real world connections drop and programs crash, so this part stops halfway on purpose, to see whether the State was saved.
 
@@ -204,7 +204,7 @@ def cells():
         ---
         ## Part 4 ⭐: Resume, or start from blank?
 
-        > 📍 **Matching slides**: slides 27-28; minimum to complete: tell apart resuming an unfinished thread, retrieving a finished result, and a fresh run on a new ID
+        > 📍 **Matching slides**: slides 28-29; minimum to complete: tell apart resuming an unfinished thread, retrieving a finished result, and a fresh run on a new ID
 
         The last part stopped halfway and left an "unfinished" State in the checkpoint. This part uses the thread_id to look for a checkpoint:
         if it finds one stopped halfway, it **resumes**; if it is already finished, it **only reads the existing result**; only a brand-new ID **starts from blank**.
@@ -217,7 +217,7 @@ def cells():
 
         ### 🤔 Prediction questions (three rounds; write the answers on paper)
 
-        Follow the slides in two steps: do the first round on slide 27; once resuming works, go to slide 28 for the second and third rounds.
+        Follow the slides in two steps: do the first round on slide 28; once resuming works, go to slide 29 for the second and third rounds.
         1. Keep the thread_id as **Alex's homework** (same as in Part 3) and run. Which station does it start from? Does `skill_name` need to be picked again?
         2. Run again with the same ID: will the finished result be reviewed again?
         3. Change the thread_id to a **never-used** "Ben's homework" and run again. Which station does it start from this time?
@@ -270,7 +270,7 @@ def cells():
         ---
         ## Part 5: The State history of one thread
 
-        > 📍 **Matching slides**: slide 28 (look at the State history after the run finishes)
+        > 📍 **Matching slides**: slide 29 (look at the State history after the run finishes)
 
         Part 4 looked at the "latest" checkpoint. In fact the checkpointer **saves one checkpoint every time a station finishes**, and the cell below lists every checkpoint of the same thread_id.
 
@@ -308,7 +308,7 @@ def cells():
         ---
         ## Part 6 (optional): Evals: how do you write "what it should do" as rules that code can check?
 
-        > 📍 **Matching slides**: optional slide 43 "Optional: checking a pure agent with code", 44 "Optional: a fixed test set, before vs. after a change"
+        > 📍 **Matching slides**: optional slide 44 "Optional: checking a pure agent with code", 45 "Optional: a fixed test set, before vs. after a change"
 
         This appendix switches to a different system: a **pure agent**, not the integrated helper from Parts 1-5; it puts check_syntax into its optional toolbox too. Without an outer flow, how do you know whether it follows the rules? The answer is **test it**.
 
@@ -318,7 +318,7 @@ def cells():
         - **baseline** (the original version, used as the reference point): says nothing special about order
         - **v2**: adds one sentence, "always call check_syntax before giving feedback" (here `check_syntax` is the helper's syntax check wrapped as a tool)
 
-        The "eval" here sets test cases for an agent, and it is a different thing from the "verifying agent" on Session 2 slide 35 that checks each piece of feedback. The form field "run_verification" means whether to run this eval.
+        The "eval" here sets test cases for an agent, and it is a different thing from the "verifying agent" on Session 2 slide 36 that checks each piece of feedback. The form field "run_verification" means whether to run this eval.
 
         ⚠️ This part calls the model about 20-30 times. If your free quota is small, **run it after class**: tick "run_verification" in the form and run the cell.
 

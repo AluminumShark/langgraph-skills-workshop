@@ -173,9 +173,10 @@ Session 2:
 | s2-new-permissions | Same handbook, only the available tools change |
 | s2-023 | Three habits before using an external Skill |
 | s2-024 | Combining workflow and agent: wiring handbooks and tools |
-| s2-025 | Where workflow meets agent: load the handbook, provide the tools |
-| s2-new-checkpoint | Pause once, then resume with the same ID |
-| s2-new-checkpoint-compare | Then compare: a finished ID vs. a new ID |
+| s2-025 | Connecting the workflow, handbooks and tools |
+| s2-checkpoint-why | Why save checkpoints: what if a review stops halfway? |
+| s2-new-checkpoint | Hands-on: pause first, then resume with the same ID |
+| s2-new-checkpoint-compare | Finished ID vs. new ID: will it review again? |
 | s2-028 | Stop 4: What goes where |
 | s2-030 | Back to the sticky note: does every step need an agent? |
 | s2-031 | Feature 1: fetching homework from GitHub |

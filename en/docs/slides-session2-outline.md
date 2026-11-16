@@ -1,6 +1,6 @@
 # Session 2 slide outline: Agent Skills and the system's division of labor
 
-The HTML deck has 57 slides: 40 main-line slides and 17 optional slides for after class. The existing graphics and styles are kept, and each slide maps to its original page by a stable ID. Slide numbers follow the current presentation order.
+The HTML deck has 58 slides: 41 main-line slides and 17 optional slides for after class. The existing graphics and styles are kept, and each slide maps to its original page by a stable ID. Slide numbers follow the current presentation order.
 
 ## Two-hour schedule
 
@@ -44,38 +44,39 @@ The HTML deck has 57 slides: 40 main-line slides and 17 optional slides for afte
 | 23 | new / s2-new-permissions | Same handbook, only the available tools change | Main line |
 | 24 | 23 / s2-023 | Three habits before using an external Skill | Main line |
 | 25 | 24 / s2-024 | Combining workflow and agent: wiring handbooks and tools | Main line |
-| 26 | 25 / s2-025 | Where workflow meets agent: load the handbook, provide the tools | Main line |
-| 27 | new / s2-new-checkpoint | Pause once, then resume with the same ID | Main line |
-| 28 | new / s2-new-checkpoint-compare | Then compare: a finished ID vs. a new ID | Main line |
-| 29 | 28 / s2-028 | Stop 4: What goes where | Main line |
-| 30 | 30 / s2-030 | Back to the sticky note: does every step need an agent? | Main line |
-| 31 | 31 / s2-031 | Feature 1: fetching homework from GitHub | Main line |
-| 32 | 32 / s2-032 | Syntax, tone, and the assignment: separate responsibilities | Main line |
-| 33 | 35 / s2-035 | Pause: which checks must run on every submission? | Main line |
-| 34 | 36 / s2-036 | Reviewing 200 submissions: independent first, then parallel | Main line |
-| 35 | 37 / s2-037 | Verifying feedback: rules first, then independent judgment | Main line |
-| 36 | 39 / s2-039 | Before sending email, make the flow wait for confirmation | Main line |
-| 37 | 40 / s2-040 | The Homework Helper's full division of labor | Main line |
-| 38 | 42 / s2-042 | Six questions to ask, in order, when designing | Main line |
-| 39 | 43 / s2-043 | 8 minutes: your turn to design | Main line |
-| 40 | 44 / s2-044 | Wrapping up both sessions | Main line |
-| 41 | 46 / s2-046 | After class: optional reading by need | Optional after class |
-| 42 | 10 / s2-010 | Optional after class: swap the cards, see if the pick changes | Optional after class |
-| 43 | 26 / s2-026 | Optional: checking a pure agent with code | Optional after class |
-| 44 | 27 / s2-027 | Optional: a fixed test set, before vs. after a change | Optional after class |
-| 45 | 34 / s2-034 | Optional reading: when data grows, retrieve before answering (RAG) | Optional after class |
-| 46 | 45 / s2-045 | Optional reading: from demo to maintainable | Optional after class |
-| 47 | 47 / s2-047 | Supplementary: moving to the cloud | Optional after class |
-| 48 | 41 / s2-041 | The division of labor in the cloud: where each box lives | Optional after class |
-| 49 | 48 / s2-048 | Leaving Colab: three things to replace | Optional after class |
-| 50 | 49 / s2-049 | Packaging: langgraph.json is the packing slip | Optional after class |
-| 51 | 50 / s2-050 | Optional reading: choose a deployment by operational needs | Optional after class |
-| 52 | 51 / s2-051 | Moving each role to the cloud | Optional after class |
-| 53 | 52 / s2-052 | Reviewing 200 at once: Send | Optional after class |
-| 54 | 53 / s2-053 | Waiting for confirmation before sending: interrupt | Optional after class |
-| 55 | 54 / s2-054 | After launch: observable and containable | Optional after class |
-| 56 | 55 / s2-055 | References and further resources | Optional after class |
-| 57 | 56 / s2-056 | References (cont.): supplementary and cloud | Optional after class |
+| 26 | 25 / s2-025 | Connecting the workflow, handbooks and tools | Main line |
+| 27 | new / s2-checkpoint-why | Why save checkpoints: what if a review stops halfway? | Main line |
+| 28 | new / s2-new-checkpoint | Hands-on: pause first, then resume with the same ID | Main line |
+| 29 | new / s2-new-checkpoint-compare | Finished ID vs. new ID: will it review again? | Main line |
+| 30 | 28 / s2-028 | Stop 4: What goes where | Main line |
+| 31 | 30 / s2-030 | Back to the sticky note: does every step need an agent? | Main line |
+| 32 | 31 / s2-031 | Feature 1: fetching homework from GitHub | Main line |
+| 33 | 32 / s2-032 | Syntax, tone, and the assignment: separate responsibilities | Main line |
+| 34 | 35 / s2-035 | Pause: which checks must run on every submission? | Main line |
+| 35 | 36 / s2-036 | Reviewing 200 submissions: independent first, then parallel | Main line |
+| 36 | 37 / s2-037 | Verifying feedback: rules first, then independent judgment | Main line |
+| 37 | 39 / s2-039 | Before sending email, make the flow wait for confirmation | Main line |
+| 38 | 40 / s2-040 | The Homework Helper's full division of labor | Main line |
+| 39 | 42 / s2-042 | Six questions to ask, in order, when designing | Main line |
+| 40 | 43 / s2-043 | 8 minutes: your turn to design | Main line |
+| 41 | 44 / s2-044 | Wrapping up both sessions | Main line |
+| 42 | 46 / s2-046 | After class: optional reading by need | Optional after class |
+| 43 | 10 / s2-010 | Optional after class: swap the cards, see if the pick changes | Optional after class |
+| 44 | 26 / s2-026 | Optional: checking a pure agent with code | Optional after class |
+| 45 | 27 / s2-027 | Optional: a fixed test set, before vs. after a change | Optional after class |
+| 46 | 34 / s2-034 | Optional reading: when data grows, retrieve before answering (RAG) | Optional after class |
+| 47 | 45 / s2-045 | Optional reading: from demo to maintainable | Optional after class |
+| 48 | 47 / s2-047 | Supplementary: moving to the cloud | Optional after class |
+| 49 | 41 / s2-041 | The division of labor in the cloud: where each box lives | Optional after class |
+| 50 | 48 / s2-048 | Leaving Colab: three things to replace | Optional after class |
+| 51 | 49 / s2-049 | Packaging: langgraph.json is the packing slip | Optional after class |
+| 52 | 50 / s2-050 | Optional reading: choose a deployment by operational needs | Optional after class |
+| 53 | 51 / s2-051 | Moving each role to the cloud | Optional after class |
+| 54 | 52 / s2-052 | Reviewing 200 at once: Send | Optional after class |
+| 55 | 53 / s2-053 | Waiting for confirmation before sending: interrupt | Optional after class |
+| 56 | 54 / s2-054 | After launch: observable and containable | Optional after class |
+| 57 | 55 / s2-055 | References and further resources | Optional after class |
+| 58 | 56 / s2-056 | References (cont.): supplementary and cloud | Optional after class |
 
 ## Notebook alignment and teaching notes
 
@@ -91,20 +92,20 @@ For the check of saved outputs from 2026-11-03 and the items still to be synced,
 - **2-D: the three saved states.** Only the same unfinished ID resumes; a never-used new ID with new input starts from the beginning; viewing a finished ID shows the finished state. Viewing history is not a history rerun, which is left for optional reading. On one slide, do the Part 3 pause and the first round of Part 4 (resume). On the next slide, compare the second round of Part 4 (a finished ID) and the third round (a brand-new ID); Part 5 views the history. The minimum is being able to explain these three states and which steps ran. To redo the experiment, rebuild the paused state as the notebook says, and do not reuse a finished ID.
 - **2-D eval: optional after class; be clear about the architecture switch.** What it compares is a pure agent's baseline against a prompt change, not the main line's combined workflow and agent. The scoring does not call the model again, while the agent under test still uses a model. A pass rate over five tests describes only that run; a workflow still needs tests for routing, format, and content.
 - **System design: roles can be combined.** A tool is an ability to act, MCP is one way to connect, a Skill is the way and criteria for doing something, and the workflow is control. A Skill does not automatically hide MCP tool schemas. First discuss using the same agent on independent inputs one by one, then limited parallelism if speed requires it; a sub-agent needs a reason of context, permission, or independent judgment, not just a different tone.
-- **The GitHub requirement and the demo boundary (slide 31).** Collecting homework from GitHub is the design goal. 2-E currently uses five homeworks in a Python dictionary as the data source, served through a real custom MCP server that provides list_homework and get_homework; the workflow calls them directly and does not connect to students' GitHub repos. Both stdio and HTTP are local demos on Colab, and sending email only writes to a simulated outbox. Connecting to GitHub means implementing or adapting tool names, parameters, and return formats.
-- **The latest real counter-example (slides 35 and 54).** 2-E once let feedback with an ambiguous indentation level pass model verification. Four spaces per level does not mean four spaces on every line; before sending, still check the full suggested edit, and rerun syntax and behavior tests if needed.
+- **The GitHub requirement and the demo boundary (slide 32).** Collecting homework from GitHub is the design goal. 2-E currently uses five homeworks in a Python dictionary as the data source, served through a real custom MCP server that provides list_homework and get_homework; the workflow calls them directly and does not connect to students' GitHub repos. Both stdio and HTTP are local demos on Colab, and sending email only writes to a simulated outbox. Connecting to GitHub means implementing or adapting tool names, parameters, and return formats.
+- **The latest real counter-example (slides 36 and 55).** 2-E once let feedback with an ambiguous indentation level pass model verification. Four spaces per level does not mean four spaces on every line; before sending, still check the full suggested edit, and rerun syntax and behavior tests if needed.
 - **Verification: fixed rules first, then semantic review where needed.** A verifier needs the assignment, the original homework, and the draft feedback, not an isolated answer. It can also be wrong. 2-E is a simplified version: no assignment attachment and no read_spec, and the auditor only sees the homework with line numbers and the feedback. The confirmation before sending must be a required node in the flow, so no other tool path can bypass it.
 - **The wrap-up order is fixed.** The full division-of-labor diagram → the six design questions → the student task → the two-session summary. RAG, eval, the production checklist, and deployment all move to optional reading after the summary, with no added in-class explanation.
 - **2-E: keep the outcome stages separate.** Simulated tools and human confirmation in Colab, a local API, generating deployment files, and actually building and deploying are different stages of completion. Generating a Dockerfile or langgraph.json does not mean it is publicly live; no real email is sent in class.
 
 ## Pause points and merged slides
 
-- **2-A (20 minutes)**: background and handbook about 5 minutes, the picking mechanism about 2, the A picking activity about 3, B editing the body about 5, comparing results and attachments about 5. In Part 1, stop to identify the card and the body; stop after A before B; stop after B, and don't let students run on into C. The explanation of C moves to appendix slide 42. The notebook code and the A→B→C order need no changes.
-- **2-D (15 minutes)**: integration about 7 minutes; pause and resume about 4; the finished/brand-new ID comparison about 3; viewing history about 1. Slide 27 does one unfinished-thread resume only; slide 28 does the finished and brand-new IDs, ending with the Part 5 history. Use the syntactically valid default homework first, and confirm the next station before continuing.
-- **System design (25 minutes)**: slides 29–38, 10 slides in all. Opening and roles 2 minutes, fetching homework 3, syntax and tone comparison 3, the must-run-checks activity 3, independent batches 3, verification 3, confirmation before sending 2, the whole diagram 3, the six-question recap 2, and about 1 minute of buffer. In each case, students add one row to the same design sheet; the six questions are only a review, not a re-teach.
-- **The last 12 minutes**: slide 39, student design, 8 minutes; slide 40, sharing and summary, 4 minutes. The appendix starts at slide 41, and we don't keep teaching after the main line ends.
+- **2-A (20 minutes)**: background and handbook about 5 minutes, the picking mechanism about 2, the A picking activity about 3, B editing the body about 5, comparing results and attachments about 5. In Part 1, stop to identify the card and the body; stop after A before B; stop after B, and don't let students run on into C. The explanation of C moves to appendix slide 43. The notebook code and the A→B→C order need no changes.
+- **2-D (15 minutes)**: integration about 7 minutes; pause and resume about 4; the finished/brand-new ID comparison about 3; viewing history about 1. Slide 27 first explains why checkpoints are needed; slide 28 does one unfinished-thread resume only; slide 29 does the finished and brand-new IDs, ending with the Part 5 history. Use the syntactically valid default homework first, and confirm the next station before continuing.
+- **System design (25 minutes)**: slides 30–39, 10 slides in all. Opening and roles 2 minutes, fetching homework 3, syntax and tone comparison 3, the must-run-checks activity 3, independent batches 3, verification 3, confirmation before sending 2, the whole diagram 3, the six-question recap 2, and about 1 minute of buffer. In each case, students add one row to the same design sheet; the six questions are only a review, not a re-teach.
+- **The last 12 minutes**: slide 40, student design, 8 minutes; slide 41, sharing and summary, 4 minutes. The appendix starts at slide 42, and we don't keep teaching after the main line ends.
 
-Merges this time: `s2-029` (back to the sticky note) merged into `s2-030`; `s2-033` (tone and assignment requirements) merged into `s2-032`; `s2-038` (division-of-labor principles) merged into `s2-036` and `s2-037`. Added `s2-new-skill-choice` and `s2-new-checkpoint-compare`. `s2-010` moved to the appendix. All other stable IDs are kept; the table is the authority for the order.
+Merges this time: `s2-029` (back to the sticky note) merged into `s2-030`; `s2-033` (tone and assignment requirements) merged into `s2-032`; `s2-038` (division-of-labor principles) merged into `s2-036` and `s2-037`. Added `s2-new-skill-choice` and `s2-new-checkpoint-compare`, `s2-checkpoint-why`. `s2-010` moved to the appendix. All other stable IDs are kept; the table is the authority for the order.
 
 ## How to teach it
 
